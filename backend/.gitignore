@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Local Database & Storage Caches
+.moleculer
+.nodemonignore
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Security and Database Secrets (Never commit these!)
+.env
+.env.local
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+
+# System Files
+.DS_Store

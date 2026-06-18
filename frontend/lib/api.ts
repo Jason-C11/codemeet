@@ -1,17 +1,45 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+async function send(
+  method: string,
+  url: string,
+  data?: any,
+  cookie?: string
+): Promise<any> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
 
-export async function signup(data: any) {
-  return fetch(`${API_BASE}/api/auth/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  if (cookie) {
+    headers["Cookie"] = cookie;
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND}${url}`,
+    {
+      method,
+      headers,
+      body: data ? JSON.stringify(data) : null,
+      credentials: "include",
+    }
+  );
+
+  const contentType = res.headers.get("content-type");
+
+  const payload =
+    contentType && contentType.includes("application/json")
+      ? await res.json()
+      : await res.text();
+
+  if (!res.ok) {
+    throw payload;
+  }
+
+  return payload;
 }
 
-export async function login(data: any) {
-  return fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+export async function signup(username: string, email: string, password: string) {
+  return send("POST", "/api/auth/signup", { username, email, password });
 }
+
+export async function login(email: string, password: string) {
+  return send("POST", "/api/auth/login", { email, password });
+} 

@@ -3,33 +3,39 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
-  const { name, username, email, password } = req.body;
+  const { username, email, password } = req.body;
 
   try {
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedUsername = username.toLowerCase().trim();
+
+    const existingEmail = await User.findOne({ email: normalizedEmail });
+    if (existingEmail) {
+      return res.status(409).json({ error: "Email already in use" });
+    }
+
+    const existingUsername = await User.findOne({
+      username: normalizedUsername,
     });
 
-    if (existingUser) {
-      if (existingUser.email === email) {
-        return res.status(409).json({ error: "Email already in use" });
-      }
+    if (existingUsername) {
       return res.status(409).json({ error: "Username already taken" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      username,
-      email,
-      password: hashedPassword,
+      username: normalizedUsername,
+      email: normalizedEmail,
+      hash: hashedPassword,
     });
 
     return res.status(201).json({
       userId: user._id,
     });
   } catch (err) {
+    console.error(err);
+
     return res.status(500).json({
       error: "Server error during signup",
     });
@@ -46,7 +52,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const valid = await bcrypt.compare(password, user.password);
+    const valid = await bcrypt.compare(password, user.hash);
 
     if (!valid) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -56,16 +62,36 @@ export const login = async (req, res) => {
       throw new Error("JWT_SECRET is missing from environment variables");
     }
 
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-    return res.status(200).json({ token });
-
+    return res.status(200).json({
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+      },
+    });
   } catch (err) {
-    return res.status(500).json({error: "Server error during login"});
+    return res.status(500).json({
+      error: "Server error during login",
+    });
   }
+};
+
+export const logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  return res.status(200).json({ message: "Logged out successfully" });
 };

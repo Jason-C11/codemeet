@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import {
+  Alert,
   Dialog,
   DialogContent,
   Box,
+  Snackbar,
   Typography,
   TextField,
   Button,
@@ -14,6 +16,12 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { signup, login } from "../lib/api";
+import {
+  isValidEmail,
+  isValidPassword,
+  isValidUsername,
+} from "../utils/validation";
 
 export default function AuthModal({
   open,
@@ -27,12 +35,72 @@ export default function AuthModal({
   };
 
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' })
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
 
-    const handleInputChange = (e) => {
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handlesubmit = async (e) => {
+    e.preventDefault();
+
+    const { email, password, username } = formData;
+
+    const showError = (message) =>
+      setSnackbar({
+        open: true,
+        message,
+        severity: "error",
+      });
+
+    const showSuccess = (message) =>
+      setSnackbar({
+        open: true,
+        message,
+        severity: "success",
+      });
+
+    // -------------------
+    // Validation
+    // -------------------
+    if (view === "signup" && !isValidUsername(username)) {
+      return showError(
+        "Username must be at least 3 characters and can only contain letters, numbers, and underscores",
+      );
+    }
+
+    if (!isValidEmail(email)) {
+      return showError("Invalid email");
+    }
+
+    if (!isValidPassword(password)) {
+      return showError("Password must be at least 6 characters");
+    }
+
+    try {
+      if (view === "login") {
+        await login(email, password);
+        showSuccess("Login successful!");
+      } else {
+        await signup(username, email, password);
+        showSuccess("Signup successful!");
+      }
+    } catch (err) {
+      showError(
+        err?.error || `${view === "login" ? "Login" : "Signup"} failed!`,
+      );
+    }
+  };
 
   return (
     <Dialog
@@ -40,11 +108,11 @@ export default function AuthModal({
       onClose={handleClose}
       fullWidth
       maxWidth="xs"
-        slotProps={{
-            paper: {
-            sx: { borderRadius: 3, p: 2 }
-            }
-  }}
+      slotProps={{
+        paper: {
+          sx: { borderRadius: 3, p: 2 },
+        },
+      }}
     >
       <IconButton
         onClick={handleClose}
@@ -64,25 +132,34 @@ export default function AuthModal({
             {view === "login" ? "Welcome Back" : "Create Account"}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {view === "login"
-              ? "Log in to your account"
-              : "Sign up here"}
+            {view === "login" ? "Log in to your account" : "Sign up here"}
           </Typography>
         </Box>
 
         <Box
           component="form"
-          noValidate
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+          onSubmit={handlesubmit}
         >
           {view === "signup" && (
-            <TextField label="Username" variant="outlined" fullWidth required />
+            <TextField
+              label="Username"
+              name="username"
+              variant="outlined"
+              value={formData.username}
+              onChange={handleInputChange}
+              fullWidth
+              required
+            />
           )}
 
           <TextField
             label="Email Address"
             type="email"
+            name="email"
             variant="outlined"
+            value={formData.email}
+            onChange={handleInputChange}
             fullWidth
             required
           />
@@ -94,16 +171,20 @@ export default function AuthModal({
             onChange={handleInputChange}
             fullWidth
             required
-            type={showPassword ? "text" : "password"} 
+            type={showPassword ? "text" : "password"}
             slotProps={{
               input: {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      onClick={() => setShowPassword(!showPassword)} 
+                      onClick={() => setShowPassword(!showPassword)}
                       edge="end"
                     >
-                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      {showPassword ? (
+                        <VisibilityOffIcon />
+                      ) : (
+                        <VisibilityIcon />
+                      )}
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -142,6 +223,20 @@ export default function AuthModal({
             </Typography>
           </Box>
         </Box>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        >
+          <Alert
+            onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </DialogContent>
     </Dialog>
   );

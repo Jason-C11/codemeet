@@ -2,7 +2,7 @@ async function send(
   method: string,
   url: string,
   data?: any,
-  cookie?: string
+  cookie?: string,
 ): Promise<any> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -12,15 +12,12 @@ async function send(
     headers["Cookie"] = cookie;
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND}${url}`,
-    {
-      method,
-      headers,
-      body: data ? JSON.stringify(data) : null,
-      credentials: "include",
-    }
-  );
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}${url}`, {
+    method,
+    headers,
+    body: data ? JSON.stringify(data) : null,
+    credentials: "include",
+  });
 
   const contentType = res.headers.get("content-type");
 
@@ -36,10 +33,22 @@ async function send(
   return payload;
 }
 
-export async function signup(username: string, email: string, password: string) {
+export async function signup(
+  username: string,
+  email: string,
+  password: string,
+) {
   return send("POST", "/api/auth/signup", { username, email, password });
 }
 
 export async function login(email: string, password: string) {
   return send("POST", "/api/auth/login", { email, password });
-} 
+}
+
+export async function logout() {
+  return send("POST", "/api/auth/logout");
+}
+
+export async function checkAuth() {
+  return send("GET", "/api/auth/check");
+}

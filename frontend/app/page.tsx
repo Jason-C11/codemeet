@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Box, Button, Container, Typography } from "@mui/material";
 import AuthModal from "@/components/AuthModal";
+import Navbar from "@/components/Navbar";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -14,42 +16,46 @@ export default function Home() {
     setModalInitialView(viewType);
     setModalOpen(true);
   };
+  const { user } = useAuth();
 
   return (
-    <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
-      <Container maxWidth="lg">
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      {user && <Navbar />}
+      <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
+        <Container maxWidth="lg">
+          <Typography variant="h1" component="h1" gutterBottom>
+            CodeMeet.io
+          </Typography>
+          <Typography variant="h4" component="h3" gutterBottom>
+            Your All-in-One Mock Coding Interview Platform
+          </Typography>
 
-       <Typography variant="h1" component="h1" gutterBottom>
-          CodeMeet.io
-        </Typography>
-       <Typography variant="h4" component="h3" gutterBottom>
-          Your All-in-One Mock Coding Interview Platform
-        </Typography>
+          <Typography variant="body1">
+            CodeMeet.io is a mock coding interview platform designed to help you
+            practice and develop your data structures and algorithms skills by
+            simulating a real coding interview environment. With low-friction
+            setup you can start practicing with peers in seconds.
+          </Typography>
 
-        <Typography variant="body1">
-          CodeMeet.io is a mock coding interview platform designed to help you
-          practice and develop your data structures and algorithms skills by
-          simulating a real coding interview environment. With low-friction
-          setup you can start practicing with peers in seconds.
-        </Typography>
+          { !user && (
+            <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
+              <Button variant="outlined" onClick={() => openAuth("login")}>
+                Log In
+              </Button>
+              <Button variant="contained" onClick={() => openAuth("signup")}>
+                Sign Up
+              </Button>
+            </Box>
+          )}
+        </Container>
 
-        <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
-          <Button variant="outlined" onClick={() => openAuth("login")}>
-            Log In
-          </Button>
-          <Button variant="contained" onClick={() => openAuth("signup")}>
-            Sign Up
-          </Button>
-        </Box>
-
-      </Container>
-
-      <AuthModal
-        open={modalOpen}
-        handleClose={() => setModalOpen(false)}
-        initialView={modalInitialView}
-        key={modalInitialView}
-      />
+        <AuthModal
+          open={modalOpen}
+          handleClose={() => setModalOpen(false)}
+          initialView={modalInitialView}
+          key={modalInitialView}
+        />
+      </Box>
     </Box>
   );
 }

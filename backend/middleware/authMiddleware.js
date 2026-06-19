@@ -1,4 +1,5 @@
 import { body, validationResult } from "express-validator";
+import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
 export const registerInfoValidation = [
@@ -28,24 +29,30 @@ export const handleBadRequest = (req, res, next) => {
   next();
 };
 
-export const isAuthenticated = (req, res, next) => {
+export const isAuthenticated = async (req, res, next) => {
   const token = req.cookies.token;
 
   if (!token) {
-    return res.status(401).json({
-      error: "Unauthorized",
-    });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = decoded;
+    const user = await User.findById(decoded.userId).select("username email");
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    req.user = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    };
 
     next();
   } catch (err) {
-    return res.status(401).json({
-      error: "Invalid token",
-    });
+    return res.status(401).json({ error: "Invalid token" });
   }
 };

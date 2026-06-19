@@ -31,11 +31,13 @@ export const signup = async (req, res) => {
     });
 
     return res.status(201).json({
-      userId: user._id,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
     });
   } catch (err) {
-    console.error(err);
-
     return res.status(500).json({
       error: "Server error during signup",
     });
@@ -46,7 +48,8 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -76,8 +79,8 @@ export const login = async (req, res) => {
     return res.status(200).json({
       user: {
         id: user._id,
+        username: user.username,
         email: user.email,
-        name: user.name,
       },
     });
   } catch (err) {
@@ -94,4 +97,14 @@ export const logout = (req, res) => {
     sameSite: "lax",
   });
   return res.status(200).json({ message: "Logged out successfully" });
+};
+
+export const checkAuth = async (req, res) => {
+  try {
+    return res.status(200).json({
+      user: req.user,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Server error" });
+  }
 };

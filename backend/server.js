@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import problemRoutes from "./routes/problemRoutes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -28,6 +29,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/problems", problemRoutes);
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");

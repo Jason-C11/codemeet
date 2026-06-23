@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import {
-  Alert,
   Dialog,
   DialogContent,
   Box,
-  Snackbar,
   Typography,
   TextField,
   Button,
@@ -23,7 +21,7 @@ import {
   isValidUsername,
 } from "../utils/validation";
 import { useAuth } from "@/context/AuthContext";
-import { useSnackbar } from "@/hooks/useSnackbar";
+import { triggerSnackbar } from "@/hooks/useSnackbar";
 
 export default function AuthModal({
   open,
@@ -45,7 +43,6 @@ export default function AuthModal({
   };
   const [formData, setFormData] = useState(initialFormData);
 
-  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const { login } = useAuth();
 
   const handleInputChange = (e) => {
@@ -68,18 +65,18 @@ export default function AuthModal({
     // Validation
     // -------------------
     if (view === "signup" && !isValidUsername(username)) {
-      return showSnackbar(
+      return triggerSnackbar(
         "Username must be at least 3 characters and can only contain letters, numbers, and underscores",
         "error",
       );
     }
 
     if (!isValidEmail(email)) {
-      return showSnackbar("Invalid email", "error");
+      return triggerSnackbar("Invalid email", "error");
     }
 
     if (!isValidPassword(password)) {
-      return showSnackbar("Password must be at least 6 characters", "error");
+      return triggerSnackbar("Password must be at least 6 characters", "error");
     }
 
     try {
@@ -87,15 +84,15 @@ export default function AuthModal({
         const res = await loginRequest(email, password);
 
         login(res.user);
-        showSnackbar("Login successful!", "success");
+        triggerSnackbar("Login successful!", "success");
         handleModalClose();
       } else {
         await signupRequest(username, email, password);
-        showSnackbar("Signup successful!", "success");
+        triggerSnackbar("Signup successful!", "success");
         handleModalClose();
       }
     } catch (err) {
-      showSnackbar(
+      triggerSnackbar(
         err?.error ||
           err?.message ||
           `${view === "login" ? "Login" : "Signup"} failed!`,
@@ -228,15 +225,6 @@ export default function AuthModal({
           </Box>
         </DialogContent>
       </Dialog>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={closeSnackbar}
-      >
-        <Alert severity={snackbar.severity} variant="filled">
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

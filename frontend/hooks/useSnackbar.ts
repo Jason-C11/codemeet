@@ -1,27 +1,39 @@
 import { useState } from "react";
+import type { AlertColor } from "@mui/material/Alert";
+
+type SnackbarState = {
+  open: boolean;
+  message: string;
+  severity: AlertColor;
+};
+
+let setGlobalSnackbar: ((state: SnackbarState) => void) | null = null;
 
 export function useSnackbar() {
-  const [snackbar, setSnackbar] = useState({
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
     message: "",
     severity: "success",
   });
 
-  const showSnackbar = (message: string, severity = "success") => {
-    setSnackbar({
-      open: true,
-      message,
-      severity,
-    });
-  };
+  setGlobalSnackbar = setSnackbar;
 
   const closeSnackbar = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  return {
-    snackbar,
-    showSnackbar,
-    closeSnackbar,
-  };
+  return { snackbar, closeSnackbar };
+}
+
+export function triggerSnackbar(
+  message: string,
+  severity: AlertColor = "success",
+) {
+  if (setGlobalSnackbar) {
+    setGlobalSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  }
 }

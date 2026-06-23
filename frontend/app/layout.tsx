@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { AuthProvider } from "@/context/AuthContext";
+import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "CodeMeet.io",
@@ -10,15 +11,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
- return (
+}) {
+  return (
     <html lang="en">
       <body>
         <AppRouterCacheProvider>
           <AuthProvider>
-            {children}
+            <AppShell>{children}</AppShell>
           </AuthProvider>
         </AppRouterCacheProvider>
       </body>

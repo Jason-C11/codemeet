@@ -12,10 +12,12 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "@/context/AuthContext";
 import { logout as logoutRequest } from "@/lib/api";
 import { triggerSnackbar } from "@/hooks/useSnackbar";
+import { useRouter } from "next/navigation";
+
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-
+  const router = useRouter();
   const handleLogout = async () => {
     try {
       await logoutRequest();
@@ -30,13 +32,11 @@ export default function Navbar() {
     <AppBar position="static" elevation={1}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            CodeMeet.io
-          </Typography>
+          <Button color="inherit" onClick={() => router.push("/")}>CodeMeet.io</Button>
 
           {user && (
             <Box sx={{ display: "flex", gap: 2 }}>
-              <Button color="inherit">Practice</Button>
+              <Button color="inherit" onClick={() => router.push("/practice")}>Practice</Button>
               <Button color="inherit">Interviews</Button>
               <Button color="inherit">Rooms</Button>
             </Box>

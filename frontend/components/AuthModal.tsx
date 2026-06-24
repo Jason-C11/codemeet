@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ChangeEventHandler, SubmitEventHandler } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,11 +23,17 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { triggerSnackbar } from "@/hooks/useSnackbar";
 
+type AuthModalProps = {
+  open: boolean;
+  handleClose: () => void;
+  initialView?: "login" | "signup";
+};
+
 export default function AuthModal({
   open,
   handleClose,
   initialView = "login",
-}) {
+}: AuthModalProps) {
   const [view, setView] = useState(initialView);
 
   const toggleView = () => {
@@ -45,7 +51,7 @@ export default function AuthModal({
 
   const { login } = useAuth();
 
-  const handleInputChange = (e) => {
+  const handleInputChange: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement> = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -56,7 +62,7 @@ export default function AuthModal({
     handleClose();
   };
 
-  const handlesubmit = async (e) => {
+  const handlesubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
     const { email, password, username } = formData;
@@ -91,7 +97,7 @@ export default function AuthModal({
         triggerSnackbar("Signup successful!", "success");
         handleModalClose();
       }
-    } catch (err) {
+    } catch (err: any) {
       triggerSnackbar(
         err?.error ||
           err?.message ||
@@ -128,7 +134,7 @@ export default function AuthModal({
 
         <DialogContent>
           <Box sx={{ textAlign: "center", mb: 3, mt: 1 }}>
-            <Typography variant="h5" component="h2" fontWeight="bold">
+            <Typography variant="h5" sx={{ fontWeight: "bold" }}>
               {view === "login" ? "Welcome Back" : "Create Account"}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -211,10 +217,10 @@ export default function AuthModal({
                   component="span"
                   variant="body2"
                   color="primary"
-                  fontWeight="bold"
                   onClick={toggleView}
                   sx={{
                     cursor: "pointer",
+                    fontWeight: "bold",
                     "&:hover": { textDecoration: "underline" },
                   }}
                 >

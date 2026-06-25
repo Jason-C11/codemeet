@@ -33,6 +33,7 @@ async function send(
   return payload;
 }
 
+// Auth ======
 export async function signup(
   username: string,
   email: string,
@@ -51,4 +52,13 @@ export async function logout() {
 
 export async function checkAuth() {
   return send("GET", "/api/auth/check");
+}
+
+// Problems ======
+export async function getAllProblems() {
+  return send("GET", "/api/problems/");
+}
+
+export async function getProblemById(problemId: string) {
+  return send("GET", `/api/problems/${problemId}`);
 }

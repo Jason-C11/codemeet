@@ -10,9 +10,7 @@ export default function PracticePage() {
 
   return (
     <>
-      {user && <Navbar />}
       <CodeInterface/>
-     
     </>
   );
 }

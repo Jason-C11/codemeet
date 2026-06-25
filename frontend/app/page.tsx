@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Button, Container, Typography } from "@mui/material";
 import AuthModal from "@/components/AuthModal";
-import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -17,10 +17,22 @@ export default function Home() {
     setModalOpen(true);
   };
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const view = searchParams.get("view");
+  useEffect(() => {
+    if (view === "login") {
+      setModalInitialView("login");
+      setModalOpen(true);
+    }
+
+    if (view === "signup") {
+      setModalInitialView("signup");
+      setModalOpen(true);
+    }
+  }, [view]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {user && <Navbar />}
       <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
         <Container maxWidth="lg">
           <Typography variant="h1" component="h1" gutterBottom>
@@ -37,7 +49,7 @@ export default function Home() {
             setup you can start practicing with peers in seconds.
           </Typography>
 
-          { !user && (
+          {!user && (
             <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
               <Button variant="outlined" onClick={() => openAuth("login")}>
                 Log In

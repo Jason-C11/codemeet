@@ -14,7 +14,6 @@ import { logout as logoutRequest } from "@/lib/api";
 import { triggerSnackbar } from "@/hooks/useSnackbar";
 import { useRouter } from "next/navigation";
 
-
 export default function Navbar() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -32,18 +31,22 @@ export default function Navbar() {
     <AppBar position="static" elevation={1}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Button color="inherit" onClick={() => router.push("/")}>CodeMeet.io</Button>
+          <Button color="inherit" onClick={() => router.push("/")}>
+            CodeMeet.io
+          </Button>
 
-          {user && (
+          {
             <Box sx={{ display: "flex", gap: 2 }}>
-              <Button color="inherit" onClick={() => router.push("/practice")}>Practice</Button>
+              <Button color="inherit" onClick={() => router.push("/practice")}>
+                Practice
+              </Button>
               <Button color="inherit">Interviews</Button>
               <Button color="inherit">Rooms</Button>
             </Box>
-          )}
+          }
         </Box>
 
-        {user && (
+        {user ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Typography variant="body2">
               {user.username || user.email}
@@ -52,6 +55,23 @@ export default function Navbar() {
             <IconButton color="inherit" onClick={handleLogout}>
               <LogoutIcon />
             </IconButton>
+          </Box>
+        ) : (
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button color="inherit" onClick={() => router.push("/?view=login")}>
+              Login
+            </Button>
+
+            <Button
+              variant="contained"
+              disableElevation
+              sx={{
+                boxShadow: "none",
+              }}
+              onClick={() => router.push("/?view=signup")}
+            >
+              Sign Up
+            </Button>
           </Box>
         )}
       </Toolbar>

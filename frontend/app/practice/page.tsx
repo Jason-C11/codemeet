@@ -28,6 +28,7 @@ export default function PracticePage() {
         if (firstProb) {
           const res = await getProblemById(firstProb.problemId);
           setProblem(res);
+          setCode(res.starterCode);
         }
       } catch (err) {
         console.error("Failed to load problems:", err);
@@ -41,6 +42,7 @@ export default function PracticePage() {
     try {
       const res = await getProblemById(p.problemId);
       setProblem(res);
+      setCode(res.starterCode);
     } catch (err) {
       console.error(err);
     }

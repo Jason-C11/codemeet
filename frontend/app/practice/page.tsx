@@ -5,7 +5,7 @@ import CodeInterface from "@/components/CodeInterface";
 import { useState, useEffect } from "react";
 import ProblemModal from "@/components/ProblemModal";
 import { Box } from "@mui/material";
-import { getAllProblems, getProblemById } from "@/lib/api";
+import { getAllProblems, getProblemById, executeCode } from "@/lib/api";
 import { Problem } from "@/lib/types/Problem";
 
 export default function PracticePage() {
@@ -31,7 +31,7 @@ export default function PracticePage() {
           setCode(res.starterCode);
         }
       } catch (err) {
-        console.error("Failed to load problems:", err);
+        console.error("Failed to load problems: ", err);
       }
     };
 
@@ -55,7 +55,17 @@ export default function PracticePage() {
     setProblem(p);
   };
 
-  const handleRun = async () => {};
+  const handleRun = async () => {
+    try {
+      const res = await executeCode(code);
+      
+    }
+    catch(err) {
+      console.error("Failed to run code: ", err);
+
+    }
+
+  };
 
   return (
     <Box>

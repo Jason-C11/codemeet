@@ -2,7 +2,10 @@ import Problem from "../models/Problem.js";
 
 export const getProblemById = async (req, res) => {
   try {
-    const problem = await Problem.findOne({ problemId: req.params.id });
+    const problem = await Problem.findOne(
+      { problemId: req.params.id },
+      { hiddenTestCases: 0 },
+    );
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
     }

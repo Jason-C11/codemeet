@@ -18,19 +18,28 @@ const problemSchema = new mongoose.Schema(
 
     constraints: [{ type: String }],
 
+    methodNames: [{ type: String, required: true }],
+
     starterCode: {
       type: String,
       default: "def solution():\n    pass",
     },
 
-    testCases: [
+    sampleTestCases: [
       {
-        input: { type: String, required: true },
-        output: { type: String, required: true },
+        input: { type: mongoose.Schema.Types.Mixed, required: true },
+        output: { type: mongoose.Schema.Types.Mixed, required: true },
+      },
+    ],
+
+    hiddenTestCases: [
+      {
+        input: { type: mongoose.Schema.Types.Mixed, required: true },
+        output: { type: mongoose.Schema.Types.Mixed, required: true },
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Problem", problemSchema);

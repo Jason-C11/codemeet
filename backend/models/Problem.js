@@ -14,6 +14,20 @@ const problemSchema = new mongoose.Schema(
 
     description: { type: String, required: true },
 
+    params: [
+      {
+        name: {
+          type: String,
+          required: true,
+        },
+
+        type: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+
     examples: [{ type: String }],
 
     constraints: [{ type: String }],

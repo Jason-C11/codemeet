@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 
-export function runInDocker(code) {
+export function runInDocker(payload) {
   return new Promise((resolve) => {
     const docker = spawn(
       "docker",
@@ -40,7 +40,7 @@ export function runInDocker(code) {
       });
     });
 
-    docker.stdin.write(code);
+    docker.stdin.write(JSON.stringify(payload));
     docker.stdin.end();
   });
 }

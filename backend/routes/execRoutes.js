@@ -7,6 +7,6 @@ import {
 
 const router = express.Router();
 
-router.post("/", handleBadRequest, isAuthenticated, exec);
+router.post("/:id", handleBadRequest, isAuthenticated, exec);
 
 export default router;

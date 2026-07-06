@@ -27,6 +27,26 @@ const problemSchema = new mongoose.Schema(
         },
       },
     ],
+    
+    returnType: {
+      type: String,
+      required: true,
+      enum: [
+        "int",
+        "float",
+        "string",
+        "boolean",
+        "int[]",
+        "float[]",
+        "string[]",
+        "boolean[]",
+        "int[][]",
+        "float[][]",
+        "string[][]",
+        "boolean[][]",
+        "void",
+      ],
+    },
 
     examples: [{ type: String }],
 

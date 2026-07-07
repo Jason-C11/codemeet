@@ -1,8 +1,16 @@
+import { TestCase } from "./TestCase";
 export type Difficulty = "Easy" | "Medium" | "Hard";
 
-export type TestCase = {
-  input: string;
-  output: string;
+export type DBTypes = 
+
+  | "int" | "float" | "string" | "boolean" 
+  | "int[]" | "float[]" | "string[]" | "boolean[]" 
+  | "int[][]" | "float[][]" | "string[][]" | "boolean[][]"
+  | "void";
+
+export type Param = {
+  name: string;
+  type: DBTypes;
 };
 
 export type Problem = {
@@ -10,8 +18,10 @@ export type Problem = {
   title: string;
   difficulty: Difficulty;
   description: string;
+  params: Param[];
+  returnType: DBTypes;
   examples: string[];
   constraints: string[];
   starterCode: string;
-  testCases: TestCase[];
+  sampleTestCases: TestCase[];
 };

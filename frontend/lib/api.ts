@@ -1,3 +1,5 @@
+import { TestCase } from "./types/TestCase";
+
 async function send(
   method: string,
   url: string,
@@ -64,6 +66,6 @@ export async function getProblemById(problemId: string) {
 }
 
 // Execute code ======
-export async function executeCode(code: string) {
-  return send("POST", "/api/exec/", { code });
+export async function executeCode(problemId: string, code: string, testCases: TestCase[]) {
+  return send("POST", `/api/exec/${problemId}`, { code, testCases });
 }

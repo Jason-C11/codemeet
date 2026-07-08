@@ -1,6 +1,7 @@
 "use client";
 
 import Editor from "@monaco-editor/react";
+import Box from "@mui/material/Box";
 type Props = {
   value: string;
   onChange: (value: string | undefined) => void;
@@ -9,7 +10,7 @@ type Props = {
 
 export default function CodeEditor({ value, onChange, theme}: Props) {
   return (
-    <div style={{ height: "500px", border: "1px solid #ddd", borderRadius: 8 }}>
+    <Box sx={{ height: "100%", overflow: "hidden" }}>
       <Editor
         height="100%"
         defaultLanguage="python"
@@ -24,6 +25,6 @@ export default function CodeEditor({ value, onChange, theme}: Props) {
           scrollBeyondLastLine: false,
         }}
       />
-    </div>
+    </Box>
   );
 }

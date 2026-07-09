@@ -91,9 +91,19 @@ export default function PracticePage() {
 
         // Convert custom test case inputs from strings
         return {
-          input: testCase.input.map((value, paramIndex) =>
-            parseParameter(value, problem.params[paramIndex].type),
-          ),
+          input: testCase.input.map((value, paramIndex) => {
+            try {
+              return parseParameter(value, problem.params[paramIndex].type);
+            } catch (err) {
+              const paramName = problem.params[paramIndex].name;
+
+              throw new Error(
+                `Custom Test Case ${index + 1 - sampleCount}: Invalid input for "${paramName}": ${
+                  err instanceof Error ? err.message : "Invalid value"
+                }`,
+              );
+            }
+          }),
           expected: testCase.expected,
         };
       });
@@ -106,7 +116,11 @@ export default function PracticePage() {
 
       setResults(response.result?.results || []);
     } catch (err) {
-      console.error("Failed to run code:", err);
+      if (err instanceof Error) {
+        triggerSnackbar(err.message, "error");
+      } else {
+        triggerSnackbar("Failed to run code.", "error");
+      }
     }
   };
 

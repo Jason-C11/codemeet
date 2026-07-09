@@ -20,7 +20,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {children}
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={3000}
+          autoHideDuration={snackbar.severity === "error" ? 6000 : 3000}
           onClose={closeSnackbar}
         >
           <Alert

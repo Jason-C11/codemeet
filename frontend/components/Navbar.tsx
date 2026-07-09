@@ -28,8 +28,15 @@ export default function Navbar() {
   };
 
   return (
-    <AppBar position="static" elevation={1}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+    <AppBar
+      position="static"
+      elevation={1}
+      sx={{ borderBottom: "1px solid", borderColor: "divider", boxShadow: 1 }}
+    >
+      <Toolbar
+        variant="dense"
+        sx={{ display: "flex", justifyContent: "space-between" }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Button color="inherit" onClick={() => router.push("/")}>
             CodeMeet.io

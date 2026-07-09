@@ -68,7 +68,7 @@ export default function TestCaseEditor({
   };
 
   const handleAddTestCase = () => {
-    if (testCases.length >= 5) return;
+    if (testCases.length >= 7) return;
 
     const newTestCase: TestCase = {
       input: problem.params.map(() => ""),
@@ -105,21 +105,19 @@ export default function TestCaseEditor({
         }}
       >
         <Typography variant="h6">Test Cases</Typography>
-        <Box sx={{ p: 1, display: "flex", gap: 2 }}>
-          <Box>
-            <Button
-              variant="outlined"
-              onClick={handleAddTestCase}
-              disabled={testCases.length >= 5}
-            >
-              Add
-            </Button>
-          </Box>
-          <Box>
-            <Button variant="contained" onClick={onRun}>
-              Run
-            </Button>
-          </Box>
+
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={handleAddTestCase}
+            disabled={testCases.length >= 7}
+          >
+            Add
+          </Button>
+
+          <Button variant="contained" onClick={onRun}>
+            Run
+          </Button>
         </Box>
       </Box>
 
@@ -198,8 +196,6 @@ export default function TestCaseEditor({
               sx={{
                 p: 2,
                 minHeight: 60,
-                bgcolor: "#fafafa",
-                fontFamily: "monospace",
               }}
             >
               {currentResult?.actual !== undefined &&

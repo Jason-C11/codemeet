@@ -8,7 +8,7 @@ type Props = {
   theme: "vs-dark" | "light";
 };
 
-export default function CodeEditor({ value, onChange, theme}: Props) {
+export default function CodeEditor({ value, onChange, theme }: Props) {
   return (
     <Box sx={{ height: "100%", overflow: "hidden" }}>
       <Editor
@@ -20,6 +20,8 @@ export default function CodeEditor({ value, onChange, theme}: Props) {
         onChange={onChange}
         options={{
           fontSize: 14,
+          fontFamily: "var(--font-code)",
+          fontLigatures: false,
           minimap: { enabled: false },
           automaticLayout: true,
           scrollBeyondLastLine: false,

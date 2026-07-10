@@ -1,5 +1,21 @@
 import mongoose from "mongoose";
 
+export const DBTypes = [
+  "int",
+  "float",
+  "string",
+  "boolean",
+  "int[]",
+  "float[]",
+  "string[]",
+  "boolean[]",
+  "int[][]",
+  "float[][]",
+  "string[][]",
+  "boolean[][]",
+  "void",
+];
+
 const problemSchema = new mongoose.Schema(
   {
     problemId: { type: String, required: true, unique: true },
@@ -24,28 +40,15 @@ const problemSchema = new mongoose.Schema(
         type: {
           type: String,
           required: true,
+          enum: DBTypes.filter((type) => type !== "void"),
         },
       },
     ],
-    
+
     returnType: {
       type: String,
       required: true,
-      enum: [
-        "int",
-        "float",
-        "string",
-        "boolean",
-        "int[]",
-        "float[]",
-        "string[]",
-        "boolean[]",
-        "int[][]",
-        "float[][]",
-        "string[][]",
-        "boolean[][]",
-        "void",
-      ],
+      enum: DBTypes,
     },
 
     examples: [{ type: String }],
@@ -62,14 +65,14 @@ const problemSchema = new mongoose.Schema(
     sampleTestCases: [
       {
         input: { type: mongoose.Schema.Types.Mixed, required: true },
-        output: { type: mongoose.Schema.Types.Mixed, required: true },
+        expected: { type: mongoose.Schema.Types.Mixed, required: true },
       },
     ],
 
     hiddenTestCases: [
       {
         input: { type: mongoose.Schema.Types.Mixed, required: true },
-        output: { type: mongoose.Schema.Types.Mixed, required: true },
+        expected: { type: mongoose.Schema.Types.Mixed, required: true },
       },
     ],
   },

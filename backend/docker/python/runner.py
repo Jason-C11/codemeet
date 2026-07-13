@@ -2,9 +2,34 @@ import sys
 import json
 import traceback
 
+DEFAULT_IMPORTS = """
+import typing
+import collections
+import functools
+import heapq
+import itertools
+import math
+import bisect
+import re
+import operator
+import string
+
+from typing import *
+from collections import *
+from functools import *
+from heapq import *
+from itertools import *
+from math import *
+from bisect import *
+from re import *
+from operator import *
+from string import *
+"""
+
 payload = json.loads(sys.stdin.read())
 
 code = payload.get("code", "")
+code_to_execute = DEFAULT_IMPORTS + "\n" + code
 test_cases = payload.get("testCases", [])
 entry = payload["entry"]
 mode = payload.get("mode", "exec")
@@ -16,7 +41,7 @@ results = []
 
 try:
     local_vars = {}
-    exec(code, local_vars)
+    exec(code_to_execute, local_vars)
 
     SolutionClass = local_vars[class_name]
     sol = SolutionClass()

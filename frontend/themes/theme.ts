@@ -46,16 +46,36 @@ const theme = createTheme({
   typography: {
     fontFamily: "Inter, sans-serif",
 
-    h1: {
+    h5: {
       fontWeight: 700,
+      fontSize: "1.5rem",
+      lineHeight: 1.3,
     },
 
-    h2: {
+    h6: {
       fontWeight: 700,
+      fontSize: "1.1rem",
     },
 
-    h3: {
-      fontWeight: 600,
+    subtitle1: {
+      fontWeight: 700,
+      fontSize: "1.05rem",
+      lineHeight: 1.5,
+    },
+
+    subtitle2: {
+      fontWeight: 700,
+      fontSize: "0.95rem",
+    },
+
+    body1: {
+      fontSize: "1rem",
+      lineHeight: 1.7,
+    },
+
+    body2: {
+      fontSize: "0.95rem",
+      lineHeight: 1.6,
     },
 
     button: {
@@ -124,6 +144,15 @@ const theme = createTheme({
         root: {
           textTransform: "none",
           fontWeight: 500,
+        },
+      },
+    },
+
+    MuiListItem: {
+      styleOverrides: {
+        root: {
+          paddingTop: 4,
+          paddingBottom: 4,
         },
       },
     },

@@ -57,7 +57,10 @@ def transform_problem(problem):
         "returnType": python_metadata["returnType"],
 
         "examples": [
-            example["example_text"]
+            {
+                "text": example["example_text"],
+                "images": example.get("images", [])
+            }
             for example in problem.get("examples", [])
         ],
 
@@ -97,11 +100,24 @@ def import_problems():
                 continue
 
             if OVERWRITE_EXISTING:
-                problems_collection.replace_one(
+                problems_collection.update_one(
                     {
                         "problemId": parsed_problem["problemId"]
                     },
-                    parsed_problem,
+                    {
+                        "$set": {
+                            "title": parsed_problem["title"],
+                            "difficulty": parsed_problem["difficulty"],
+                            "description": parsed_problem["description"],
+                            "params": parsed_problem["params"],
+                            "returnType": parsed_problem["returnType"],
+                            "examples": parsed_problem["examples"],
+                            "constraints": parsed_problem["constraints"],
+                            "methodNames": parsed_problem["methodNames"],
+                            "starterCode": parsed_problem["starterCode"],
+                            "sampleTestCases": parsed_problem["sampleTestCases"],
+                        }
+                    },
                     upsert=True,
                 )
             else:

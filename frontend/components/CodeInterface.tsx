@@ -1,12 +1,13 @@
 "use client";
 
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, List, ListItem, Typography } from "@mui/material";
 import CodeEditor from "@/components/CodeEditor";
 import TestCaseEditor from "@/components/TestCaseEditor";
 import { Problem } from "@/lib/types/Problem";
 import { TestCase } from "@/lib/types/TestCase";
 import { TestCaseResult } from "@/lib/types/TestCaseResult";
+
 type Props = {
   problem: Problem | null;
   code: string;
@@ -49,33 +50,91 @@ export default function CodeInterface({
                 Difficulty: {problem.difficulty}
               </Typography>
 
-              <Typography variant="body1" sx={{ mt: 2 }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  mt: 2,
+                  whiteSpace: "pre-line",
+                }}
+              >
                 {problem.description}
               </Typography>
 
-              <Typography variant="subtitle1" sx={{ mt: 3 }}>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                sx={{ mt: 3, mb: 1 }}
+              >
                 Constraints
               </Typography>
 
-              <ul>
+              <List>
                 {(problem.constraints ?? []).map((c, i) => (
-                  <li key={i}>
+                  <ListItem key={i}>
                     <Typography variant="body2">{c}</Typography>
-                  </li>
+                  </ListItem>
                 ))}
-              </ul>
+              </List>
 
-              <Typography variant="subtitle1" sx={{ mt: 3 }}>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                sx={{ mt: 3, mb: 1 }}
+              >
                 Examples
               </Typography>
 
-              <ul>
+              <List>
                 {(problem.examples ?? []).map((ex, i) => (
-                  <li key={i}>
-                    <Typography variant="body2">{ex}</Typography>
-                  </li>
+                  <ListItem
+                    key={i}
+                    sx={{
+                      display: "block",
+                      paddingLeft: 0,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1, fontWeight: 600 }}
+                    >
+                      Example {i + 1}
+                    </Typography>
+                    {ex.images.length > 0 &&
+                      ex.images.map((image, imgIndex) => (
+                        <Box
+                          key={imgIndex}
+                          component="img"
+                          src={image}
+                          alt={`Example ${i + 1}`}
+                          sx={{
+                            width: "350px",
+                            maxWidth: "100%",
+                            height: "auto",
+                            display: "block",
+                            mb: 1,
+                          }}
+                        />
+                      ))}
+
+                    <Typography
+                      variant="body2"
+                      component="pre"
+                      sx={{
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "monospace",
+                        backgroundColor: "background.paper",
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 1,
+                        padding: 1.5,
+                        mt: 1,
+                      }}
+                    >
+                      {ex.text}
+                    </Typography>
+                  </ListItem>
                 ))}
-              </ul>
+              </List>
             </>
           ) : null}
         </Box>

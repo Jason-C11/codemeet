@@ -51,7 +51,19 @@ const problemSchema = new mongoose.Schema(
       enum: DBTypes,
     },
 
-    examples: [{ type: String }],
+    examples: [
+      {
+        text: {
+          type: String,
+          required: true,
+        },
+
+        images: {
+          type: [String],
+          default: [],
+        },
+      },
+    ],
 
     constraints: [{ type: String }],
 

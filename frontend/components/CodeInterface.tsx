@@ -1,12 +1,26 @@
 "use client";
 
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { Box, Button, List, ListItem, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  List,
+  ListItem,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import CodeEditor from "@/components/CodeEditor";
 import TestCaseEditor from "@/components/TestCaseEditor";
 import { Problem } from "@/lib/types/Problem";
 import { TestCase } from "@/lib/types/TestCase";
 import { TestCaseResult } from "@/lib/types/TestCaseResult";
+import RestoreIcon from "@mui/icons-material/Restore";
+import { useState } from "react";
 
 type Props = {
   problem: Problem | null;
@@ -14,6 +28,7 @@ type Props = {
   testCases: TestCase[];
   results: TestCaseResult[];
   onCodeChange: (value: string | undefined) => void;
+  onResetCode: () => void;
   onRun: () => void;
   onOpenProblemSelector: () => void;
   onSetTestCases: (testCases: TestCase[]) => void;
@@ -25,19 +40,56 @@ export default function CodeInterface({
   testCases,
   results,
   onCodeChange,
+  onResetCode,
   onRun,
   onOpenProblemSelector,
   onSetTestCases,
 }: Props) {
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+
   return (
     <Group orientation="horizontal" style={{ height: "100vh" }}>
       {/* LEFT */}
       <Panel defaultSize={"50%"} minSize={"30%"}>
         <Box sx={{ height: "100%", overflow: "auto", p: 2 }}>
-          <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
             <Button variant="outlined" onClick={onOpenProblemSelector}>
               Change Problem
             </Button>
+            <Tooltip title="Reset to default code">
+              <IconButton onClick={() => setResetDialogOpen(true)}>
+                <RestoreIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Dialog
+              open={resetDialogOpen}
+              onClose={() => setResetDialogOpen(false)}
+            >
+              <DialogTitle>Reset Code?</DialogTitle>
+
+              <DialogContent>
+                <Typography>
+                  Your code will be discarded and the default code will be set.
+                </Typography>
+              </DialogContent>
+
+              <DialogActions>
+                <Button onClick={() => setResetDialogOpen(false)}>
+                  Cancel
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    onResetCode();
+                    setResetDialogOpen(false);
+                  }}
+                  color="error"
+                >
+                  Reset
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Box>
 
           {problem ? (

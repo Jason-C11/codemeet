@@ -23,12 +23,22 @@ export default function PracticePage() {
 
   const { user } = useAuth(); // check auth before submission attempts
 
+  const getCodeStorageKey = (problemId: string) => `codemeet-code-${problemId}`;
+
+  useEffect(() => {
+    if (!problem) return;
+
+    localStorage.setItem(getCodeStorageKey(problem.problemId), code);
+  }, [code, problem]);
+
   const loadProblem = useCallback(async (problemId: string) => {
     try {
       const problem = await getProblemById(problemId);
 
       setProblem(problem);
-      setCode(problem.starterCode || "");
+      const savedCode = localStorage.getItem(getCodeStorageKey(problemId));
+
+      setCode(savedCode ?? problem.starterCode ?? "");
 
       const sampleTestCases = problem.sampleTestCases || [];
       setTestCases(sampleTestCases);
@@ -68,6 +78,12 @@ export default function PracticePage() {
 
     await loadProblem(selected.problemId);
     setModalOpen(false);
+  };
+
+  const handleResetCode = () => {
+    if (!problem) return;
+
+    setCode(problem.starterCode ?? "");
   };
 
   const handleRun = async () => {
@@ -138,6 +154,7 @@ export default function PracticePage() {
         testCases={testCases}
         results={results}
         onCodeChange={(value) => setCode(value || "")}
+        onResetCode={handleResetCode}
         onRun={handleRun}
         onOpenProblemSelector={() => setModalOpen(true)}
         onSetTestCases={(updated) => setTestCases(updated)}

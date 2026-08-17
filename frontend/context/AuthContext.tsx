@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { checkAuth } from "@/lib/api";
-
+import { clearSavedCode } from "@/utils/storage";
 export type User = {
   id: string;
   username: string;
@@ -54,7 +54,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const login = (userData: User) => setUser(userData);
-  const logout = () => setUser(null);
+
+  const logout = () => {
+    clearSavedCode();
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider

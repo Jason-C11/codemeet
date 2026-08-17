@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { Box, Button, Container, Typography } from "@mui/material";
 import AuthModal from "@/components/AuthModal";
 import { useAuth } from "@/context/AuthContext";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalInitialView, setModalInitialView] = useState<"login" | "signup">(
     "login",
@@ -19,6 +20,7 @@ export default function Home() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const view = searchParams.get("view");
+
   useEffect(() => {
     if (view === "login") {
       setModalInitialView("login");
@@ -63,7 +65,10 @@ export default function Home() {
 
         <AuthModal
           open={modalOpen}
-          handleClose={() => setModalOpen(false)}
+          handleClose={() => {
+            setModalOpen(false);
+            router.replace("/");
+          }}
           initialView={modalInitialView}
           key={modalInitialView}
         />

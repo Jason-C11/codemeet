@@ -68,13 +68,39 @@ export default function CodeInterface({
                 Constraints
               </Typography>
 
-              <List>
-                {(problem.constraints ?? []).map((c, i) => (
-                  <ListItem key={i}>
-                    <Typography variant="body2">{c}</Typography>
-                  </ListItem>
-                ))}
-              </List>
+              <Box
+                sx={{
+                  bgcolor: "background.paper",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  px: 2,
+                  py: 1,
+                  width: "fit-content",
+                  maxWidth: "100%",
+                }}
+              >
+                <List
+                  sx={{
+                    m: 0,
+                    pl: 2,
+                  }}
+                >
+                  {(problem.constraints ?? []).map((c, i) => (
+                    <ListItem
+                      key={i}
+                      sx={{
+                        display: "list-item",
+                        listStyleType: "disc",
+                        py: 0.25,
+                        pl: 0,
+                      }}
+                    >
+                      <Typography variant="body2">{c}</Typography>
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
 
               <Typography
                 variant="subtitle1"
@@ -120,6 +146,7 @@ export default function CodeInterface({
                       variant="body2"
                       component="pre"
                       sx={{
+                        display: "inline-block",
                         whiteSpace: "pre-wrap",
                         fontFamily: "monospace",
                         backgroundColor: "background.paper",

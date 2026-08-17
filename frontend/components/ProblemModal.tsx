@@ -1,14 +1,14 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   List,
   ListItemButton,
   ListItemText,
-  Typography,
-  Box,
+  TextField,
 } from "@mui/material";
 
 import { Problem } from "@/lib/types/Problem";
@@ -26,19 +26,34 @@ export default function ProblemModal({
   problems,
   onSelect,
 }: Props) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredProblems = problems.filter((problem) =>
+    problem.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Select a Problem</DialogTitle>
-
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{
+        transition: {
+          onExited: () => setSearchQuery(""),
+        },
+      }}
+    >
       <DialogContent>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Choose a problem to start practicing
-          </Typography>
-        </Box>
-
+        <TextField
+          fullWidth
+          placeholder="Search for a problem"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ my: 2 }}
+        />
         <List>
-          {problems.map((p) => (
+          {filteredProblems.map((p) => (
             <ListItemButton
               key={p.problemId}
               onClick={() => {

@@ -47,7 +47,8 @@ try:
     sol = SolutionClass()
 
     method = getattr(sol, method_names[0])
-
+    passed_count = 0
+    submissionError = False
     for tc in test_cases:
         try:
             input_args = tc["input"]
@@ -57,36 +58,55 @@ try:
 
             result = method(*input_args)
 
-            base = {
-                "input": tc["input"],
-                "actual": result
-            }
-
             # Only add evaluation fields in submit mode
             if mode == "submit":
                 expected = tc.get("expected")
-                base["expected"] = expected
-                base["passed"] = result == expected
 
-            results.append(base)
+                if result == expected:
+                    passed_count += 1
+
+            else:
+                base = {
+                    "input": tc["input"],
+                    "actual": result
+                }
+                results.append(base)
 
         except Exception as e:
-            error_case = {
-                "input": tc.get("input"),
-                "actual": None,
-                "error": str(e)
-            }
+            if mode == "exec":
+                error_case = {
+                    "input": tc.get("input"),
+                    "actual": None,
+                    "error": str(e)
+                }
 
-            if mode == "submit":
-                error_case["passed"] = False
+                results.append(error_case)
+            elif mode == "submit":
+                submissionError = True
+                break
+        
+    if mode == "submit":
+        if submissionError:
+            status = "RUNTIME_ERROR"
+        elif passed_count == len(test_cases):
+            status = "ACCEPTED"
+        else:
+            status = "WRONG_ANSWER"
 
-            results.append(error_case)
+        #eventually check for TLE
 
-    print(json.dumps({
-        "status": "OK",
-        "mode": mode,
-        "results": results
-    }))
+        print(json.dumps({
+            "status": status,
+            "mode": "submit",
+            "passed": passed_count,
+            "total": len(test_cases)
+        }))
+    else:
+        print(json.dumps({
+            "status": "OK",
+            "mode": "exec",
+            "results": results
+        }))
 
 except Exception:
     print(json.dumps({

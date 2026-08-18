@@ -69,3 +69,8 @@ export async function getProblemById(problemId: string) {
 export async function executeCode(problemId: string, code: string, testCases: TestCase[]) {
   return send("POST", `/api/exec/${problemId}`, { code, testCases });
 }
+
+// Submit code ======
+export async function submitCode(problemId: string, code: string) {
+  return send("POST", `/api/submit/${problemId}`, { code });
+}

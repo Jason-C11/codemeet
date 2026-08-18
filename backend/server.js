@@ -5,6 +5,7 @@ import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import problemRoutes from "./routes/problemRoutes.js";
 import execRoutes from "./routes/execRoutes.js";
+import submitRoutes from "./routes/submitRoutes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -32,6 +33,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/exec", execRoutes);
+app.use("/api/submit", submitRoutes);
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");

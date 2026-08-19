@@ -50,11 +50,28 @@ export default function CodeInterface({
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   return (
-    <Group orientation="horizontal" style={{ height: "100vh" }}>
+    <Group orientation="horizontal" style={{ height: "100%", minHeight: 0 }}>
       {/* LEFT */}
       <Panel defaultSize={"50%"} minSize={"30%"}>
-        <Box sx={{ height: "100%", overflow: "auto", p: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+        <Box
+          sx={{
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              px: 2,
+              py: 1,
+              flexShrink: 0,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+            }}
+          >
             <Button variant="outlined" onClick={onOpenProblemSelector}>
               Change Problem
             </Button>
@@ -93,131 +110,145 @@ export default function CodeInterface({
               </DialogActions>
             </Dialog>
           </Box>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: "auto",
+              p: 2,
+              "&::after": {
+                content: '""',
+                display: "block",
+                height: 48,
+              },
+            }}
+          >
+            {problem ? (
+              <>
+                <Typography variant="h5" gutterBottom>
+                  {problem.title}
+                </Typography>
 
-          {problem ? (
-            <>
-              <Typography variant="h5" gutterBottom>
-                {problem.title}
-              </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Difficulty: {problem.difficulty}
+                </Typography>
 
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Difficulty: {problem.difficulty}
-              </Typography>
-
-              <Typography
-                variant="body1"
-                sx={{
-                  mt: 2,
-                  whiteSpace: "pre-line",
-                }}
-              >
-                {problem.description}
-              </Typography>
-
-              <Typography
-                variant="subtitle1"
-                color="primary"
-                sx={{ mt: 3, mb: 1 }}
-              >
-                Constraints
-              </Typography>
-
-              <Box
-                sx={{
-                  bgcolor: "background.paper",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  borderRadius: 1,
-                  px: 2,
-                  py: 1,
-                  width: "fit-content",
-                  maxWidth: "100%",
-                }}
-              >
-                <List
+                <Typography
+                  variant="body1"
                   sx={{
-                    m: 0,
-                    pl: 2,
+                    mt: 2,
+                    whiteSpace: "pre-line",
                   }}
                 >
-                  {(problem.constraints ?? []).map((c, i) => (
+                  {problem.description}
+                </Typography>
+
+                <Typography
+                  variant="subtitle1"
+                  color="primary"
+                  sx={{ mt: 3, mb: 1 }}
+                >
+                  Constraints
+                </Typography>
+
+                <Box
+                  sx={{
+                    bgcolor: "background.paper",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 1,
+                    px: 2,
+                    py: 1,
+                    width: "fit-content",
+                    maxWidth: "100%",
+                  }}
+                >
+                  <List
+                    sx={{
+                      m: 0,
+                      pl: 2,
+                    }}
+                  >
+                    {(problem.constraints ?? []).map((c, i) => (
+                      <ListItem
+                        key={i}
+                        sx={{
+                          display: "list-item",
+                          listStyleType: "disc",
+                          py: 0.25,
+                          pl: 0,
+                        }}
+                      >
+                        <Typography variant="body2">{c}</Typography>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+
+                <Typography
+                  variant="subtitle1"
+                  color="primary"
+                  sx={{ mt: 3, mb: 1 }}
+                >
+                  Examples
+                </Typography>
+
+                <List>
+                  {(problem.examples ?? []).map((ex, i) => (
                     <ListItem
                       key={i}
                       sx={{
-                        display: "list-item",
-                        listStyleType: "disc",
-                        py: 0.25,
-                        pl: 0,
+                        display: "block",
+                        paddingLeft: 0,
+                        mb: 2,
                       }}
                     >
-                      <Typography variant="body2">{c}</Typography>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ mb: 1, fontWeight: 600 }}
+                      >
+                        Example {i + 1}
+                      </Typography>
+                      {ex.images.length > 0 &&
+                        ex.images.map((image, imgIndex) => (
+                          <Box
+                            key={imgIndex}
+                            component="img"
+                            src={image}
+                            alt={`Example ${i + 1}`}
+                            sx={{
+                              width: "350px",
+                              maxWidth: "100%",
+                              height: "auto",
+                              display: "block",
+                              mb: 1,
+                            }}
+                          />
+                        ))}
+
+                      <Typography
+                        variant="body2"
+                        component="pre"
+                        sx={{
+                          display: "inline-block",
+                          whiteSpace: "pre-wrap",
+                          fontFamily: "monospace",
+                          backgroundColor: "background.paper",
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 1,
+                          padding: 1.5,
+                          mt: 1,
+                        }}
+                      >
+                        {ex.text}
+                      </Typography>
                     </ListItem>
                   ))}
                 </List>
-              </Box>
-
-              <Typography
-                variant="subtitle1"
-                color="primary"
-                sx={{ mt: 3, mb: 1 }}
-              >
-                Examples
-              </Typography>
-
-              <List>
-                {(problem.examples ?? []).map((ex, i) => (
-                  <ListItem
-                    key={i}
-                    sx={{
-                      display: "block",
-                      paddingLeft: 0,
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mb: 1, fontWeight: 600 }}
-                    >
-                      Example {i + 1}
-                    </Typography>
-                    {ex.images.length > 0 &&
-                      ex.images.map((image, imgIndex) => (
-                        <Box
-                          key={imgIndex}
-                          component="img"
-                          src={image}
-                          alt={`Example ${i + 1}`}
-                          sx={{
-                            width: "350px",
-                            maxWidth: "100%",
-                            height: "auto",
-                            display: "block",
-                            mb: 1,
-                          }}
-                        />
-                      ))}
-
-                    <Typography
-                      variant="body2"
-                      component="pre"
-                      sx={{
-                        display: "inline-block",
-                        whiteSpace: "pre-wrap",
-                        fontFamily: "monospace",
-                        backgroundColor: "background.paper",
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: 1,
-                        padding: 1.5,
-                        mt: 1,
-                      }}
-                    >
-                      {ex.text}
-                    </Typography>
-                  </ListItem>
-                ))}
-              </List>
-            </>
-          ) : null}
+              </>
+            ) : null}
+          </Box>
         </Box>
       </Panel>
 

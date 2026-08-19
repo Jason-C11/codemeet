@@ -3,7 +3,12 @@
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect, useCallback } from "react";
 import { Box } from "@mui/material";
-import { getAllProblems, getProblemById, executeCode, submitCode } from "@/lib/api";
+import {
+  getAllProblems,
+  getProblemById,
+  executeCode,
+  submitCode,
+} from "@/lib/api";
 import { Problem } from "@/lib/types/Problem";
 import { TestCase } from "@/lib/types/TestCase";
 import { TestCaseResult } from "@/lib/types/TestCaseResult";
@@ -14,8 +19,6 @@ import ProblemModal from "@/components/ProblemModal";
 import { SubmissionResults } from "@/lib/types/SubmissionResults";
 import SubmissionViewer from "@/components/SubmissionViewer";
 
-
-
 export default function PracticePage() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [problem, setProblem] = useState<Problem | null>(null);
@@ -25,7 +28,8 @@ export default function PracticePage() {
   const [results, setResults] = useState<TestCaseResult[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const [submissionResults, setSubmissionResults] = useState<SubmissionResults | null>(null);
+  const [submissionResults, setSubmissionResults] =
+    useState<SubmissionResults | null>(null);
 
   const { user } = useAuth(); // check auth before submission attempts
 
@@ -147,7 +151,7 @@ export default function PracticePage() {
   };
 
   const handleSubmit = async () => {
-    if (!problem) return; 
+    if (!problem) return;
 
     if (!user) {
       triggerSnackbar("You must be logged in to submit code.", "error");
@@ -164,13 +168,13 @@ export default function PracticePage() {
         triggerSnackbar("Failed to submit code.", "error");
       }
     }
-  }
+  };
 
   return (
     <Box
       sx={{
         width: "100%",
-        height: "100vh",
+        height: "calc(100vh - 50px)",
         overflow: "hidden",
       }}
     >
@@ -199,7 +203,6 @@ export default function PracticePage() {
         open={submissionResults !== null}
         onClose={() => setSubmissionResults(null)}
       />
-
     </Box>
   );
 }

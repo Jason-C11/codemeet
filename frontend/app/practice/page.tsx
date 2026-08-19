@@ -1,16 +1,20 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import CodeInterface from "@/components/CodeInterface";
 import { useState, useEffect, useCallback } from "react";
-import ProblemModal from "@/components/ProblemModal";
 import { Box } from "@mui/material";
-import { getAllProblems, getProblemById, executeCode } from "@/lib/api";
+import { getAllProblems, getProblemById, executeCode, submitCode } from "@/lib/api";
 import { Problem } from "@/lib/types/Problem";
 import { TestCase } from "@/lib/types/TestCase";
 import { TestCaseResult } from "@/lib/types/TestCaseResult";
 import { parseParameter } from "@/utils/typeParser";
 import { triggerSnackbar } from "@/hooks/useSnackbar";
+import CodeInterface from "@/components/CodeInterface";
+import ProblemModal from "@/components/ProblemModal";
+import { SubmissionResults } from "@/lib/types/SubmissionResults";
+import SubmissionViewer from "@/components/SubmissionViewer";
+
+
 
 export default function PracticePage() {
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -20,6 +24,8 @@ export default function PracticePage() {
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [results, setResults] = useState<TestCaseResult[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const [submissionResults, setSubmissionResults] = useState<SubmissionResults | null>(null);
 
   const { user } = useAuth(); // check auth before submission attempts
 
@@ -140,6 +146,26 @@ export default function PracticePage() {
     }
   };
 
+  const handleSubmit = async () => {
+    if (!problem) return; 
+
+    if (!user) {
+      triggerSnackbar("You must be logged in to submit code.", "error");
+      return;
+    }
+
+    try {
+      const response = await submitCode(problem.problemId, code);
+      setSubmissionResults(response.result);
+    } catch (err) {
+      if (err instanceof Error) {
+        triggerSnackbar(err.message, "error");
+      } else {
+        triggerSnackbar("Failed to submit code.", "error");
+      }
+    }
+  }
+
   return (
     <Box
       sx={{
@@ -158,6 +184,7 @@ export default function PracticePage() {
         onRun={handleRun}
         onOpenProblemSelector={() => setModalOpen(true)}
         onSetTestCases={(updated) => setTestCases(updated)}
+        onSubmit={handleSubmit}
       />
 
       <ProblemModal
@@ -166,6 +193,13 @@ export default function PracticePage() {
         problems={problems}
         onSelect={handleSelectProblem}
       />
+
+      <SubmissionViewer
+        result={submissionResults}
+        open={submissionResults !== null}
+        onClose={() => setSubmissionResults(null)}
+      />
+
     </Box>
   );
 }

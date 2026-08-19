@@ -30,6 +30,7 @@ type Props = {
   onCodeChange: (value: string | undefined) => void;
   onResetCode: () => void;
   onRun: () => void;
+  onSubmit: () => void;
   onOpenProblemSelector: () => void;
   onSetTestCases: (testCases: TestCase[]) => void;
 };
@@ -42,6 +43,7 @@ export default function CodeInterface({
   onCodeChange,
   onResetCode,
   onRun,
+  onSubmit,
   onOpenProblemSelector,
   onSetTestCases,
 }: Props) {
@@ -259,6 +261,7 @@ export default function CodeInterface({
                   results={results}
                   setTestCases={onSetTestCases}
                   onRun={onRun}
+                  onSubmit={onSubmit}
                 />
               </Box>
             ) : null}

@@ -29,7 +29,7 @@ export default function Navbar() {
 
   return (
     <AppBar
-      position="static"
+      position="sticky"
       elevation={1}
       sx={{ borderBottom: "1px solid", borderColor: "divider", boxShadow: 1 }}
     >

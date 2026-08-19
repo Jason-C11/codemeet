@@ -22,6 +22,7 @@ type Props = {
   results: TestCaseResult[];
   setTestCases: (tc: TestCase[]) => void;
   onRun: () => void;
+  onSubmit: () => void;
 };
 
 export default function TestCaseEditor({
@@ -30,6 +31,7 @@ export default function TestCaseEditor({
   results,
   setTestCases,
   onRun,
+  onSubmit
 }: Props) {
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -109,14 +111,19 @@ export default function TestCaseEditor({
         <Box sx={{ display: "flex", gap: 2 }}>
           <Button
             variant="outlined"
+            color="secondary"
             onClick={handleAddTestCase}
             disabled={testCases.length >= 7}
           >
             Add
           </Button>
 
-          <Button variant="contained" onClick={onRun}>
+          <Button variant="contained" color="primary" onClick={onRun}>
             Run
+          </Button>
+          
+          <Button variant="contained" color="success" onClick={onSubmit}>
+            Submit
           </Button>
         </Box>
       </Box>

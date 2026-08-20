@@ -189,7 +189,6 @@ export default function TestCaseEditor({
               }
               fullWidth
               disabled
-              helperText="Expected sample output"
             />
           )}
 

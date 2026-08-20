@@ -269,7 +269,6 @@ export default function CodeInterface({
               <CodeEditor
                 value={code}
                 onChange={onCodeChange}
-                theme={"vs-dark"}
               />
             </Box>
           </Panel>

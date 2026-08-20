@@ -5,15 +5,17 @@ import { useSnackbar } from "@/hooks/useSnackbar";
 import { Snackbar, Alert } from "@mui/material";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@mui/material/styles";
+import { ThemeContextProvider, useThemeContext } from "@/context/ThemeContext";
 import CssBaseline from "@mui/material/CssBaseline";
-import theme from "@/themes/theme";
+import { themes } from "@/themes/theme";
 import Navbar from "@/components/Navbar";
 
-export default function AppShell({ children }: { children: ReactNode }) {
+function AppContent({ children }: { children: ReactNode }) {
+  const { themeName } = useThemeContext();
   const { snackbar, closeSnackbar } = useSnackbar();
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={themes[themeName]}>
       <CssBaseline />
       <AuthProvider>
         <Navbar />
@@ -33,5 +35,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </Snackbar>
       </AuthProvider>
     </ThemeProvider>
+  );
+}
+
+export default function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <ThemeContextProvider>
+      <AppContent>{children}</AppContent>
+    </ThemeContextProvider>
   );
 }

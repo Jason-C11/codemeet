@@ -1,21 +1,26 @@
 "use client";
 
+import { useThemeContext } from "@/context/ThemeContext";
 import Editor from "@monaco-editor/react";
 import Box from "@mui/material/Box";
+
 type Props = {
   value: string;
   onChange: (value: string | undefined) => void;
-  theme: "vs-dark" | "light";
+  
 };
 
-export default function CodeEditor({ value, onChange, theme }: Props) {
+
+export default function CodeEditor({ value, onChange }: Props) {
+  const { themeName } = useThemeContext();
+
   return (
     <Box sx={{ height: "100%", overflow: "hidden" }}>
       <Editor
         height="100%"
         defaultLanguage="python"
         language="python"
-        theme={theme}
+        theme={themeName === 'light' ? 'light' : 'vs-dark'}
         value={value}
         onChange={onChange}
         options={{

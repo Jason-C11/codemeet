@@ -89,12 +89,23 @@ export default function Home() {
 
           {!user && (
             <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
-              <Button variant="outlined" onClick={() => openAuth("login")}>
-                Log In
-              </Button>
-              <Button variant="contained" onClick={() => openAuth("signup")}>
-                Sign Up
-              </Button>
+              <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => openAuth("login")}
+                >
+                  Log In
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => openAuth("signup")}
+                >
+                  Sign Up
+                </Button>
+              </Box>
             </Box>
           )}
         </Container>
@@ -208,7 +219,7 @@ export default function Home() {
               pagination={{ clickable: true }}
               spaceBetween={20}
               slidesPerView={1}
-              style={{paddingBottom: "50px"}}
+              style={{ paddingBottom: "50px" }}
             >
               {showcaseImages.map((image) => (
                 <SwiperSlide key={image.image}>

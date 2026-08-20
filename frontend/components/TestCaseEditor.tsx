@@ -31,7 +31,7 @@ export default function TestCaseEditor({
   results,
   setTestCases,
   onRun,
-  onSubmit
+  onSubmit,
 }: Props) {
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -118,11 +118,11 @@ export default function TestCaseEditor({
             Add
           </Button>
 
-          <Button variant="contained" color="primary" onClick={onRun}>
+          <Button variant="outlined" color="secondary" onClick={onRun}>
             Run
           </Button>
-          
-          <Button variant="contained" color="success" onClick={onSubmit}>
+
+          <Button variant="contained" color="primary" onClick={onSubmit}>
             Submit
           </Button>
         </Box>

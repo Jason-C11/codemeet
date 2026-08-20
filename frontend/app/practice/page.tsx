@@ -139,7 +139,10 @@ export default function PracticePage() {
         code,
         formattedTestCases,
       );
-
+      if (response.status.includes("ERROR")) {
+        triggerSnackbar(response.status, "error");
+        return;
+      }
       setResults(response.result?.results || []);
     } catch (err) {
       if (err instanceof Error) {

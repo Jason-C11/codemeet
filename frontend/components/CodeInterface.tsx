@@ -33,6 +33,7 @@ type Props = {
   onSubmit: () => void;
   onOpenProblemSelector: () => void;
   onSetTestCases: (testCases: TestCase[]) => void;
+  toolbarActions?: React.ReactNode;
 };
 
 export default function CodeInterface({
@@ -46,6 +47,7 @@ export default function CodeInterface({
   onSubmit,
   onOpenProblemSelector,
   onSetTestCases,
+  toolbarActions,
 }: Props) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
@@ -109,6 +111,7 @@ export default function CodeInterface({
                 </Button>
               </DialogActions>
             </Dialog>
+            {toolbarActions}
           </Box>
           <Box
             sx={{
@@ -266,10 +269,7 @@ export default function CodeInterface({
           {/* CODE EDITOR */}
           <Panel defaultSize={"70%"} minSize={"20%"}>
             <Box sx={{ height: "100%" }}>
-              <CodeEditor
-                value={code}
-                onChange={onCodeChange}
-              />
+              <CodeEditor value={code} onChange={onCodeChange} />
             </Box>
           </Panel>
 

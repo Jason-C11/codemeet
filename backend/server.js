@@ -7,6 +7,9 @@ import problemRoutes from "./routes/problemRoutes.js";
 import execRoutes from "./routes/execRoutes.js";
 import submitRoutes from "./routes/submitRoutes.js";
 import cookieParser from "cookie-parser";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import initializeSockets from "./sockets/index.js";
 
 dotenv.config();
 
@@ -35,6 +38,17 @@ app.use("/api/problems", problemRoutes);
 app.use("/api/exec", execRoutes);
 app.use("/api/submit", submitRoutes);
 
-app.listen(5000, () => {
+// socket.io setup
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND,
+    credentials: true,
+  },
+});
+
+initializeSockets(io);
+
+httpServer.listen(5000, () => {
   console.log("Server running on port 5000");
 });

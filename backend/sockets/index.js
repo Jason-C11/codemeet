@@ -1,4 +1,8 @@
-import { handleJoinRoom, handleLeaveRoom } from "./roomHandlers.js";
+import {
+  handleJoinRoom,
+  handleLeaveRoom,
+  handleDisconnect,
+} from "./roomHandlers.js";
 
 const initializeSockets = (io) => {
   io.on("connection", (socket) => {
@@ -9,10 +13,11 @@ const initializeSockets = (io) => {
     });
 
     socket.on("leaveRoom", (data) => {
-      handleLeaveRoom(socket, data);
+      handleLeaveRoom(io, socket, data);
     });
 
     socket.on("disconnect", () => {
+      handleDisconnect(io, socket);
       console.log("Socket disconnected:", socket.id);
     });
   });

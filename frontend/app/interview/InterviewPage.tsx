@@ -38,8 +38,15 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const getCodeStorageKey = (problemId: string) => `codemeet-code-${problemId}`;
 
   // Sockets
-  const { roomID, roomEvent, roomError, createRoom, joinRoom, leaveRoom } =
-    useInterviewRoom();
+  const {
+    roomID,
+    roomEvent,
+    roomError,
+    roomUsers,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+  } = useInterviewRoom();
 
   useEffect(() => {
     if (!problem) return;
@@ -204,6 +211,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
             initialRoomID={initialRoomID}
             roomEvent={roomEvent}
             roomError={roomError}
+            roomUsers={roomUsers}
             onCreateRoom={createRoom}
             onJoinRoom={joinRoom}
             onLeaveRoom={leaveRoom}

@@ -14,12 +14,19 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { triggerSnackbar } from "@/hooks/useSnackbar";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
+import RoomUsers from "./RoomUsers";
+
+type RoomUser = {
+  socketID: string;
+  username: string;
+};
 
 interface RoomControlsProps {
   roomID: string | null;
   initialRoomID?: string;
   roomEvent: "created" | "joined" | "left" | null;
   roomError: string | null;
+  roomUsers: RoomUser[];
   onCreateRoom: () => void;
   onJoinRoom: (roomID: string) => void;
   onLeaveRoom: () => void;
@@ -30,6 +37,7 @@ const RoomControls = ({
   initialRoomID,
   roomEvent,
   roomError,
+  roomUsers,
   onCreateRoom,
   onJoinRoom,
   onLeaveRoom,
@@ -146,6 +154,7 @@ const RoomControls = ({
             >
               Leave Room
             </Button>
+            <RoomUsers users={roomUsers} />
           </>
         )}
       </Stack>

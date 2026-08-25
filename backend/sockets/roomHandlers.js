@@ -20,7 +20,13 @@ const handleJoinRoom = (io, socket, { roomID, username, create }) => {
     return;
   }
 
+  socket.data.username = username;
+  socket.data.roomID = roomID;
   socket.join(roomID);
+
+  const users = getRoomUsers(io, roomID);
+
+  io.to(roomID).emit("roomUsers", users);
 
   socket.emit("roomJoined", {
     roomID,
@@ -31,10 +37,40 @@ const handleJoinRoom = (io, socket, { roomID, username, create }) => {
   console.log(`${socket.id} joined room ${roomID} as ${username}`);
 };
 
-const handleLeaveRoom = (socket, { roomID, username }) => {
-  socket.leave(roomID);
+const getRoomUsers = (io, roomID) => {
+  const sockets = io.sockets.adapter.rooms.get(roomID);
 
+  if (!sockets) return [];
+
+  return [...sockets].map((socketID) => {
+    const socket = io.sockets.sockets.get(socketID);
+
+    return {
+      socketID,
+      username: socket.data.username,
+    };
+  });
+};
+
+const handleLeaveRoom = (io, socket, { roomID, username }) => {
+  socket.leave(roomID);
+  socket.data.roomID = null;
+  const users = getRoomUsers(io, roomID);
+  io.to(roomID).emit("roomUsers", users);
   console.log(`${socket.id} left room ${roomID} as ${username}`);
 };
 
-export { handleJoinRoom, handleLeaveRoom };
+const handleDisconnect = (io, socket) => {
+  const roomID = socket.data.roomID;
+
+  if (!roomID) return;
+
+  const users = getRoomUsers(io, roomID).filter(
+    (user) => user.socketID !== socket.id,
+  );
+
+  io.to(roomID).emit("roomUsers", users);
+
+  console.log(`${socket.id} left room ${roomID} as ${socket.data.username}`);
+};
+export { handleJoinRoom, handleLeaveRoom, handleDisconnect };

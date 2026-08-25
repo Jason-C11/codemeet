@@ -4,12 +4,31 @@ import socket from "../sockets/socket";
 
 type RoomEvent = "created" | "joined" | "left" | null;
 
+type RoomUser = {
+  socketID: string;
+  username: string;
+};
+
 const useInterviewRoom = () => {
   const { user } = useAuth();
 
   const [roomID, setRoomID] = useState<string | null>(null);
   const [roomEvent, setRoomEvent] = useState<RoomEvent>(null);
   const [roomError, setRoomError] = useState<string | null>(null);
+  const [roomUsers, setRoomUsers] = useState<RoomUser[]>([]);
+
+  const resetRoomState = () => {
+    setRoomID(null);
+    setRoomEvent(null);
+    setRoomError(null);
+    setRoomUsers([]);
+  };
+
+  const disconnectSocket = () => {
+    if (socket.connected) {
+      socket.disconnect();
+    }
+  };
 
   // Handle server room events
   useEffect(() => {
@@ -38,21 +57,39 @@ const useInterviewRoom = () => {
     };
   }, []);
 
+  // Handle room users update
+  useEffect(() => {
+    const handleRoomUsers = (users: RoomUser[]) => {
+      setRoomUsers(users);
+    };
+
+    socket.on("roomUsers", handleRoomUsers);
+
+    return () => {
+      socket.off("roomUsers", handleRoomUsers);
+    };
+  }, []);
+
   // Clear room state when user logs out
   useEffect(() => {
     if (!user) {
-      setRoomID(null);
-      setRoomEvent(null);
-      setRoomError(null);
-      if (socket.connected) {
-        socket.disconnect();
-      }
+      resetRoomState();
+      disconnectSocket();
     }
   }, [user]);
 
+  // Disconnect when leaving the interview page
+  useEffect(() => {
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+
   const createRoom = () => {
     if (!user) return;
+
     setRoomError(null);
+
     const roomID = crypto.randomUUID();
 
     socket.connect();
@@ -66,7 +103,9 @@ const useInterviewRoom = () => {
 
   const joinRoom = (roomID: string) => {
     if (!user) return;
+
     setRoomError(null);
+
     socket.connect();
 
     socket.emit("joinRoom", {
@@ -77,17 +116,17 @@ const useInterviewRoom = () => {
   };
 
   const leaveRoom = () => {
-    if (!roomID) return;
-    if (!user) return;
+    if (!roomID || !user) return;
+
     setRoomError(null);
+
     socket.emit("leaveRoom", {
       roomID,
       username: user.username,
     });
 
-    socket.disconnect();
-
-    setRoomID(null);
+    disconnectSocket();
+    resetRoomState();
     setRoomEvent("left");
   };
 
@@ -95,6 +134,7 @@ const useInterviewRoom = () => {
     roomID,
     roomEvent,
     roomError,
+    roomUsers,
     createRoom,
     joinRoom,
     leaveRoom,

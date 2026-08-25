@@ -76,8 +76,8 @@ export default function Navbar() {
               <Button color="inherit" onClick={() => router.push("/practice")}>
                 Practice
               </Button>
-              <Button color="inherit" onClick={() => router.push("/interviews")}>
-                Interviews
+              <Button color="inherit" onClick={() => router.push("/interview")}>
+                Interview
               </Button>
             </Box>
           }

@@ -13,9 +13,11 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { triggerSnackbar } from "@/hooks/useSnackbar";
 import { useAuth } from "../context/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface RoomControlsProps {
   roomID: string | null;
+  initialRoomID?: string;
   roomEvent: "created" | "joined" | "left" | null;
   roomError: string | null;
   onCreateRoom: () => void;
@@ -25,6 +27,7 @@ interface RoomControlsProps {
 
 const RoomControls = ({
   roomID,
+  initialRoomID,
   roomEvent,
   roomError,
   onCreateRoom,
@@ -34,7 +37,24 @@ const RoomControls = ({
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [inputRoomID, setInputRoomID] = useState("");
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (initialRoomID && !user) {
+      triggerSnackbar(
+        "You must be logged in to join a room. Please log in and try again.",
+        "error",
+      );
+      return;
+    }
+
+    if (!initialRoomID || !user) return;
+
+    onJoinRoom(initialRoomID);
+  }, [initialRoomID, user, loading]);
 
   useEffect(() => {
     if (roomEvent === "created") {
@@ -97,6 +117,7 @@ const RoomControls = ({
 
   const handleOnLeaveRoom = () => {
     onLeaveRoom();
+    router.push("/interview");
   };
 
   return (

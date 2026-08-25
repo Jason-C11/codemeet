@@ -21,7 +21,7 @@ import SubmissionViewer from "@/components/SubmissionViewer";
 import useInterviewRoom from "@/hooks/useInterviewRoom";
 import RoomControls from "@/components/RoomControls";
 
-export default function PracticePage() {
+const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [code, setCode] = useState<string>("");
@@ -201,6 +201,7 @@ export default function PracticePage() {
         toolbarActions={
           <RoomControls
             roomID={roomID}
+            initialRoomID={initialRoomID}
             roomEvent={roomEvent}
             roomError={roomError}
             onCreateRoom={createRoom}
@@ -224,4 +225,6 @@ export default function PracticePage() {
       />
     </Box>
   );
-}
+};
+
+export default InterviewPage;

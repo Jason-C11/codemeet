@@ -85,9 +85,10 @@ export default function TestCaseEditor({
   const currentTestCase = testCases[safeTabIndex];
   const currentResult = results?.[safeTabIndex];
 
-  const formattedInputs = !isUserGeneratedCase
-    ? formatVariables(currentTestCase.input, problem.params)
-    : null;
+  const formattedInputs =
+    !isUserGeneratedCase && currentTestCase
+      ? formatVariables(currentTestCase.input, problem.params)
+      : null;
 
   return (
     <Paper

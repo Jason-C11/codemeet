@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import socket from "../sockets/socket";
+import { TestCase } from "@/lib/types/TestCase";
+
+// ==================== Types
 
 type RoomEvent = "created" | "joined" | "left" | null;
 
@@ -9,13 +12,37 @@ type RoomUser = {
   username: string;
 };
 
-const useInterviewRoom = () => {
+export type RoomState = {
+  problemId: string | null;
+  code: string;
+  testCases: TestCase[];
+};
+
+interface UseInterviewRoomProps {
+  onRoomState: (state: RoomState) => void;
+  onCodeChange: (code: string) => void;
+  onProblemChange: (problemId: string) => void;
+  onTestCasesChange: (testCases: TestCase[]) => void;
+}
+
+// ==================== Hook
+
+const useInterviewRoom = ({
+  onRoomState,
+  onCodeChange,
+  onProblemChange,
+  onTestCasesChange,
+}: UseInterviewRoomProps) => {
   const { user } = useAuth();
+
+  // ==================== State
 
   const [roomID, setRoomID] = useState<string | null>(null);
   const [roomEvent, setRoomEvent] = useState<RoomEvent>(null);
   const [roomError, setRoomError] = useState<string | null>(null);
   const [roomUsers, setRoomUsers] = useState<RoomUser[]>([]);
+
+  // ==================== Helpers
 
   const resetRoomState = () => {
     setRoomID(null);
@@ -30,7 +57,8 @@ const useInterviewRoom = () => {
     }
   };
 
-  // Handle server room events
+  // ==================== Room Events
+
   useEffect(() => {
     const handleRoomJoined = ({
       roomID,
@@ -57,7 +85,22 @@ const useInterviewRoom = () => {
     };
   }, []);
 
-  // Handle room users update
+  // ==================== Initial Room State
+
+  useEffect(() => {
+    const handleRoomState = (state: RoomState) => {
+      onRoomState(state);
+    };
+
+    socket.on("roomState", handleRoomState);
+
+    return () => {
+      socket.off("roomState", handleRoomState);
+    };
+  }, [onRoomState]);
+
+  // ==================== Room Users
+
   useEffect(() => {
     const handleRoomUsers = (users: RoomUser[]) => {
       setRoomUsers(users);
@@ -70,7 +113,92 @@ const useInterviewRoom = () => {
     };
   }, []);
 
-  // Clear room state when user logs out
+  // ==================== Code Synchronization
+
+  useEffect(() => {
+    const handleCodeChange = ({ code }: { code: string }) => {
+      onCodeChange(code);
+    };
+
+    socket.on("code:change", handleCodeChange);
+
+    return () => {
+      socket.off("code:change", handleCodeChange);
+    };
+  }, [onCodeChange]);
+
+  const emitCodeChange = useCallback(
+    (code: string) => {
+      if (!roomID) return;
+
+      socket.emit("code:change", {
+        roomID,
+        code,
+      });
+    },
+    [roomID],
+  );
+
+  // ==================== Problem Synchronization
+
+  useEffect(() => {
+    const handleProblemChange = ({ problemId }: { problemId: string }) => {
+      onProblemChange(problemId);
+    };
+
+    socket.on("problem:change", handleProblemChange);
+
+    return () => {
+      socket.off("problem:change", handleProblemChange);
+    };
+  }, [onProblemChange]);
+
+  const emitProblemChange = useCallback(
+    (problemId: string, starterCode: string, testCases: TestCase[]) => {
+      if (!roomID) return;
+
+      socket.emit("problem:change", {
+        roomID,
+        problemId,
+        starterCode,
+        testCases,
+      });
+    },
+    [roomID],
+  );
+
+  // ==================== Test Case Synchronization
+
+  useEffect(() => {
+    const handleTestCasesChange = ({
+      testCases,
+    }: {
+      testCases: TestCase[];
+    }) => {
+      onTestCasesChange(testCases);
+    };
+
+    socket.on("testCases:change", handleTestCasesChange);
+
+    return () => {
+      socket.off("testCases:change", handleTestCasesChange);
+    };
+  }, [onTestCasesChange]);
+
+  const emitTestCasesChange = useCallback(
+    (testCases: TestCase[]) => {
+      if (!roomID) return;
+
+      socket.emit("testCases:change", {
+        roomID,
+        testCases,
+      });
+    },
+    [roomID],
+  );
+
+  // ==================== Authentication / Cleanup
+
   useEffect(() => {
     if (!user) {
       resetRoomState();
@@ -78,27 +206,42 @@ const useInterviewRoom = () => {
     }
   }, [user]);
 
-  // Disconnect when leaving the interview page
   useEffect(() => {
     return () => {
       disconnectSocket();
     };
   }, []);
 
-  const createRoom = () => {
+  // ==================== Room Actions
+
+  const createRoom = (
+    problemId: string | null,
+    code: string,
+    testCases: TestCase[],
+  ) => {
     if (!user) return;
 
     setRoomError(null);
 
     const roomID = crypto.randomUUID();
 
-    socket.connect();
+    const create = () => {
+      socket.emit("joinRoom", {
+        roomID,
+        username: user.username,
+        create: true,
+        problemId,
+        code,
+        testCases,
+      });
+    };
 
-    socket.emit("joinRoom", {
-      roomID,
-      username: user.username,
-      create: true,
-    });
+    if (socket.connected) {
+      create();
+    } else {
+      socket.once("connect", create);
+      socket.connect();
+    }
   };
 
   const joinRoom = (roomID: string) => {
@@ -106,13 +249,20 @@ const useInterviewRoom = () => {
 
     setRoomError(null);
 
-    socket.connect();
+    const join = () => {
+      socket.emit("joinRoom", {
+        roomID,
+        username: user.username,
+        create: false,
+      });
+    };
 
-    socket.emit("joinRoom", {
-      roomID,
-      username: user.username,
-      create: false,
-    });
+    if (socket.connected) {
+      join();
+    } else {
+      socket.once("connect", join);
+      socket.connect();
+    }
   };
 
   const leaveRoom = () => {
@@ -130,14 +280,21 @@ const useInterviewRoom = () => {
     setRoomEvent("left");
   };
 
+  // ==================== Return
+
   return {
     roomID,
     roomEvent,
     roomError,
     roomUsers,
+
     createRoom,
     joinRoom,
     leaveRoom,
+
+    emitCodeChange,
+    emitProblemChange,
+    emitTestCasesChange,
   };
 };
 

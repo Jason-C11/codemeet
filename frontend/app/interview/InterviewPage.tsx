@@ -18,26 +18,102 @@ import CodeInterface from "@/components/CodeInterface";
 import ProblemModal from "@/components/ProblemModal";
 import { SubmissionResults } from "@/lib/types/SubmissionResults";
 import SubmissionViewer from "@/components/SubmissionViewer";
-import useInterviewRoom from "@/hooks/useInterviewRoom";
+import useInterviewRoom, { RoomState } from "@/hooks/useInterviewRoom";
 import RoomControls from "@/components/RoomControls";
 
 const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
+  const { user } = useAuth();
+
+  // ==================== State
+
   const [problems, setProblems] = useState<Problem[]>([]);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [code, setCode] = useState<string>("");
-
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [results, setResults] = useState<TestCaseResult[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-
   const [submissionResults, setSubmissionResults] =
     useState<SubmissionResults | null>(null);
 
-  const { user } = useAuth(); // check auth before submission attempts
+  // ==================== Problem Loading
 
-  const getCodeStorageKey = (problemId: string) => `codemeet-code-${problemId}`;
+  const loadProblem = useCallback(async (problemId: string) => {
+    try {
+      const problem = await getProblemById(problemId);
+      const sampleTestCases = problem.sampleTestCases ?? [];
 
-  // Sockets
+      setProblem(problem);
+      setCode(problem.starterCode ?? "");
+      setTestCases(sampleTestCases);
+
+      setResults(
+        sampleTestCases.map(
+          (testCase: TestCase): TestCaseResult => ({
+            input: testCase.input,
+            actual: "",
+          }),
+        ),
+      );
+
+      return problem;
+    } catch (err) {
+      console.error(`Failed to load problem: ${problemId}`, err);
+
+      return null;
+    }
+  }, []);
+
+  // ==================== Socket Synchronization
+
+  // ----- Remote Code Changes
+
+  const handleRemoteCodeChange = useCallback((newCode: string) => {
+    setCode(newCode);
+  }, []);
+
+  // ----- Remote Room State
+
+  const handleRoomState = useCallback(
+    async (state: RoomState) => {
+      if (state.problemId) {
+        await loadProblem(state.problemId);
+      }
+
+      setCode(state.code);
+      setTestCases(state.testCases);
+    },
+    [loadProblem],
+  );
+
+  // ----- Remote Problem Changes
+
+  const handleProblemChange = useCallback(
+    async (problemId: string) => {
+      setProblem(null);
+      setTestCases([]);
+      setResults([]);
+
+      await loadProblem(problemId);
+    },
+    [loadProblem],
+  );
+
+  // ----- Remote Test Case Changes
+
+  const handleRemoteTestCasesChange = useCallback(
+    (updatedTestCases: TestCase[]) => {
+      setTestCases(updatedTestCases);
+
+      setResults(
+        updatedTestCases.map((testCase) => ({
+          input: testCase.input,
+          actual: "",
+        })),
+      );
+    },
+    [],
+  );
+
   const {
     roomID,
     roomEvent,
@@ -46,47 +122,39 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     createRoom,
     joinRoom,
     leaveRoom,
-  } = useInterviewRoom();
+    emitCodeChange,
+    emitProblemChange,
+    emitTestCasesChange,
+  } = useInterviewRoom({
+    onRoomState: handleRoomState,
+    onCodeChange: handleRemoteCodeChange,
+    onProblemChange: handleProblemChange,
+    onTestCasesChange: handleRemoteTestCasesChange,
+  });
 
-  useEffect(() => {
-    if (!problem) return;
+  // ==================== Room Actions
 
-    localStorage.setItem(getCodeStorageKey(problem.problemId), code);
-  }, [code, problem]);
+  const handleCreateRoom = () => {
+    createRoom(problem?.problemId ?? null, code, testCases);
+  };
 
-  const loadProblem = useCallback(async (problemId: string) => {
-    try {
-      const problem = await getProblemById(problemId);
-
-      setProblem(problem);
-      const savedCode = localStorage.getItem(getCodeStorageKey(problemId));
-
-      setCode(savedCode ?? problem.starterCode ?? "");
-
-      const sampleTestCases = problem.sampleTestCases || [];
-      setTestCases(sampleTestCases);
-
-      setResults(
-        sampleTestCases.map((testCase: TestCase) => ({
-          input: testCase.input,
-          actual: "",
-        })),
-      );
-    } catch (err) {
-      console.error(`Failed to load problem: ${problemId}`, err);
-    }
-  }, []);
+  // ==================== Initialize Problems
 
   useEffect(() => {
     const initializeProblems = async () => {
       try {
         const problems = await getAllProblems();
+
         setProblems(problems);
 
-        const defaultProblem = problems[0];
+        // When joining an existing room, the room state
+        // determines the problem instead.
+        if (!initialRoomID) {
+          const defaultProblem = problems[0];
 
-        if (defaultProblem) {
-          await loadProblem(defaultProblem.problemId);
+          if (defaultProblem) {
+            await loadProblem(defaultProblem.problemId);
+          }
         }
       } catch (err) {
         console.error("Failed to initialize problems:", err);
@@ -94,20 +162,57 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     };
 
     initializeProblems();
-  }, [loadProblem]);
+  }, [loadProblem, initialRoomID]);
+
+  // ==================== Problem Actions
 
   const handleSelectProblem = async (selected: Problem) => {
-    if (problem?.problemId === selected.problemId) return;
+    if (problem?.problemId === selected.problemId) {
+      return;
+    }
 
-    await loadProblem(selected.problemId);
+    const loadedProblem = await loadProblem(selected.problemId);
+
+    if (!loadedProblem) return;
+
+    emitProblemChange(
+      loadedProblem.problemId,
+      loadedProblem.starterCode ?? "",
+      loadedProblem.sampleTestCases ?? [],
+    );
+
     setModalOpen(false);
+  };
+
+  // ==================== Code Actions
+
+  const handleCodeChange = (value: string | undefined) => {
+    const newCode = value ?? "";
+
+    setCode(newCode);
+    emitCodeChange(newCode);
   };
 
   const handleResetCode = () => {
     if (!problem) return;
 
-    setCode(problem.starterCode ?? "");
+    const resetCode = problem.starterCode ?? "";
+
+    setCode(resetCode);
+    emitCodeChange(resetCode);
   };
+
+  // ==================== Test Case Actions
+
+  const handleTestCasesChange = useCallback(
+    (updated: TestCase[]) => {
+      setTestCases(updated);
+      emitTestCasesChange(updated);
+    },
+    [emitTestCasesChange],
+  );
+
+  // ==================== Run
 
   const handleRun = async () => {
     if (!problem) return;
@@ -137,7 +242,9 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
               const paramName = problem.params[paramIndex].name;
 
               throw new Error(
-                `Custom Test Case ${index + 1 - sampleCount}: Invalid input for "${paramName}": ${
+                `Custom Test Case ${
+                  index + 1 - sampleCount
+                }: Invalid input for "${paramName}": ${
                   err instanceof Error ? err.message : "Invalid value"
                 }`,
               );
@@ -152,10 +259,12 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
         code,
         formattedTestCases,
       );
+
       if (response.status.includes("ERROR")) {
         triggerSnackbar(response.status, "error");
         return;
       }
+
       setResults(response.result?.results || []);
     } catch (err) {
       if (err instanceof Error) {
@@ -165,6 +274,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       }
     }
   };
+
+  // ==================== Submit
 
   const handleSubmit = async () => {
     if (!problem) return;
@@ -176,6 +287,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
 
     try {
       const response = await submitCode(problem.problemId, code);
+
       setSubmissionResults(response.result);
     } catch (err) {
       if (err instanceof Error) {
@@ -185,6 +297,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       }
     }
   };
+
+  // ==================== Render
 
   return (
     <Box
@@ -199,11 +313,11 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
         code={code}
         testCases={testCases}
         results={results}
-        onCodeChange={(value) => setCode(value || "")}
+        onCodeChange={handleCodeChange}
         onResetCode={handleResetCode}
         onRun={handleRun}
         onOpenProblemSelector={() => setModalOpen(true)}
-        onSetTestCases={(updated) => setTestCases(updated)}
+        onSetTestCases={handleTestCasesChange}
         onSubmit={handleSubmit}
         toolbarActions={
           <RoomControls
@@ -212,7 +326,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
             roomEvent={roomEvent}
             roomError={roomError}
             roomUsers={roomUsers}
-            onCreateRoom={createRoom}
+            onCreateRoom={handleCreateRoom}
             onJoinRoom={joinRoom}
             onLeaveRoom={leaveRoom}
           />

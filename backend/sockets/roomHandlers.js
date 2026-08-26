@@ -1,4 +1,10 @@
-const handleJoinRoom = (io, socket, { roomID, username, create }) => {
+import { createRoomState, getRoomState, deleteRoomState } from "./roomState.js";
+
+const handleJoinRoom = (
+  io,
+  socket,
+  { roomID, username, create, problemId, code, testCases },
+) => {
   const roomExists = io.sockets.adapter.rooms.has(roomID);
 
   // User is trying to join an existing room
@@ -6,23 +12,32 @@ const handleJoinRoom = (io, socket, { roomID, username, create }) => {
     socket.emit("roomError", {
       message: "Room does not exist.",
     });
-    console.log(`Room ${roomID} does not exist.`);
 
     return;
   }
 
-  // Room ID already exists
+  // User is trying to create an existing room
   if (create && roomExists) {
     socket.emit("roomError", {
       message: "Unable to create room.",
     });
-    console.log(`Room ${roomID} already exists.`);
+
     return;
   }
 
   socket.data.username = username;
   socket.data.roomID = roomID;
+
   socket.join(roomID);
+
+  // Create state for a new room using creator's current state
+  if (create) {
+    createRoomState(roomID, {
+      problemId,
+      code,
+      testCases,
+    });
+  }
 
   const users = getRoomUsers(io, roomID);
 
@@ -33,6 +48,9 @@ const handleJoinRoom = (io, socket, { roomID, username, create }) => {
     username,
     created: create,
   });
+
+  // Send the current state to the user
+  socket.emit("roomState", getRoomState(roomID));
 
   console.log(`${socket.id} joined room ${roomID} as ${username}`);
 };
@@ -55,8 +73,16 @@ const getRoomUsers = (io, roomID) => {
 const handleLeaveRoom = (io, socket, { roomID, username }) => {
   socket.leave(roomID);
   socket.data.roomID = null;
+
   const users = getRoomUsers(io, roomID);
+
   io.to(roomID).emit("roomUsers", users);
+
+  // Delete room state when nobody is left
+  if (users.length === 0) {
+    deleteRoomState(roomID);
+  }
+
   console.log(`${socket.id} left room ${roomID} as ${username}`);
 };
 
@@ -71,6 +97,27 @@ const handleDisconnect = (io, socket) => {
 
   io.to(roomID).emit("roomUsers", users);
 
+  // Delete room state when nobody is left
+  if (users.length === 0) {
+    deleteRoomState(roomID);
+  }
+
   console.log(`${socket.id} left room ${roomID} as ${socket.data.username}`);
 };
-export { handleJoinRoom, handleLeaveRoom, handleDisconnect };
+
+const roomHandlers = (io, socket) => {
+  socket.on("joinRoom", (data) => {
+    handleJoinRoom(io, socket, data);
+  });
+
+  socket.on("leaveRoom", (data) => {
+    handleLeaveRoom(io, socket, data);
+  });
+
+  socket.on("disconnect", () => {
+    handleDisconnect(io, socket);
+    console.log("Socket disconnected:", socket.id);
+  });
+};
+
+export default roomHandlers;

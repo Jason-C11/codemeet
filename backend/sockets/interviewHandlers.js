@@ -11,6 +11,14 @@ const interviewHandlers = (socket) => {
       code,
     });
   });
+  // ==================== Cursor changes
+
+  socket.on("cursor:change", ({ roomID, selection, username }) => {
+    socket.to(roomID).emit("cursor:change", {
+      username,
+      selection,
+    });
+  });
 
   // ==================== Problem changes
   socket.on(

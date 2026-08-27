@@ -21,6 +21,7 @@ import { TestCase } from "@/lib/types/TestCase";
 import { TestCaseResult } from "@/lib/types/TestCaseResult";
 import RestoreIcon from "@mui/icons-material/Restore";
 import { useState } from "react";
+import { EditorSelection } from "@/lib/types/EditorSelection";
 
 type Props = {
   problem: Problem | null;
@@ -28,6 +29,7 @@ type Props = {
   testCases: TestCase[];
   results: TestCaseResult[];
   onCodeChange: (value: string | undefined) => void;
+  onCursorChange: (selection: EditorSelection) => void;
   onResetCode: () => void;
   onRun: () => void;
   onSubmit: () => void;
@@ -42,6 +44,7 @@ export default function CodeInterface({
   testCases,
   results,
   onCodeChange,
+  onCursorChange,
   onResetCode,
   onRun,
   onSubmit,
@@ -269,7 +272,11 @@ export default function CodeInterface({
           {/* CODE EDITOR */}
           <Panel defaultSize={"70%"} minSize={"20%"}>
             <Box sx={{ height: "100%" }}>
-              <CodeEditor value={code} onChange={onCodeChange} />
+              <CodeEditor
+                value={code}
+                onChange={onCodeChange}
+                onCursorChange={onCursorChange}
+              />
             </Box>
           </Panel>
 

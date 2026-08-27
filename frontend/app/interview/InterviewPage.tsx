@@ -20,6 +20,7 @@ import { SubmissionResults } from "@/lib/types/SubmissionResults";
 import SubmissionViewer from "@/components/SubmissionViewer";
 import useInterviewRoom, { RoomState } from "@/hooks/useInterviewRoom";
 import RoomControls from "@/components/RoomControls";
+import { EditorSelection, RemoteCursor } from "@/lib/types/EditorSelection";
 
 const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const { user } = useAuth();
@@ -34,6 +35,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [submissionResults, setSubmissionResults] =
     useState<SubmissionResults | null>(null);
+
+  const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([]);
 
   // ==================== Problem Loading
 
@@ -69,6 +72,23 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
 
   const handleRemoteCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
+  }, []);
+
+  // ----- Remote Cursor Changes
+  const handleRemoteCursorChange = useCallback((remoteCursor: RemoteCursor) => {
+    setRemoteCursors((prev) => {
+      const existing = prev.find(
+        (cursor) => cursor.username === remoteCursor.username,
+      );
+
+      if (existing) {
+        return prev.map((cursor) =>
+          cursor.username === remoteCursor.username ? remoteCursor : cursor,
+        );
+      }
+
+      return [...prev, remoteCursor];
+    });
   }, []);
 
   // ----- Remote Room State
@@ -125,11 +145,13 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     emitCodeChange,
     emitProblemChange,
     emitTestCasesChange,
+    emitCursorChange,
   } = useInterviewRoom({
     onRoomState: handleRoomState,
     onCodeChange: handleRemoteCodeChange,
     onProblemChange: handleProblemChange,
     onTestCasesChange: handleRemoteTestCasesChange,
+    onCursorChange: handleRemoteCursorChange,
   });
 
   // ==================== Room Actions
@@ -201,7 +223,14 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     setCode(resetCode);
     emitCodeChange(resetCode);
   };
+  // ==================== Code Selection
 
+  const handleCursorChange = useCallback(
+    (selection: EditorSelection) => {
+      emitCursorChange(selection);
+    },
+    [emitCursorChange],
+  );
   // ==================== Test Case Actions
 
   const handleTestCasesChange = useCallback(
@@ -315,6 +344,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
         results={results}
         onCodeChange={handleCodeChange}
         onResetCode={handleResetCode}
+        onCursorChange={handleCursorChange}
         onRun={handleRun}
         onOpenProblemSelector={() => setModalOpen(true)}
         onSetTestCases={handleTestCasesChange}

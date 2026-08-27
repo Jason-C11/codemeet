@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import socket from "../sockets/socket";
 import { TestCase } from "@/lib/types/TestCase";
+import { EditorSelection, RemoteCursor } from "@/lib/types/EditorSelection";
 
 // ==================== Types
 
@@ -23,6 +24,7 @@ interface UseInterviewRoomProps {
   onCodeChange: (code: string) => void;
   onProblemChange: (problemId: string) => void;
   onTestCasesChange: (testCases: TestCase[]) => void;
+  onCursorChange: (cursor: RemoteCursor) => void;
 }
 
 // ==================== Hook
@@ -32,6 +34,7 @@ const useInterviewRoom = ({
   onCodeChange,
   onProblemChange,
   onTestCasesChange,
+  onCursorChange,
 }: UseInterviewRoomProps) => {
   const { user } = useAuth();
 
@@ -137,6 +140,35 @@ const useInterviewRoom = ({
       });
     },
     [roomID],
+  );
+
+  // ==================== Code Editor Position
+
+  useEffect(() => {
+    const handleCursorChange = ({ username, selection }: RemoteCursor) => {
+      onCursorChange({
+        username,
+        selection,
+      });
+    };
+
+    socket.on("cursor:change", handleCursorChange);
+
+    return () => {
+      socket.off("cursor:change", handleCursorChange);
+    };
+  }, [onCursorChange]);
+
+  const emitCursorChange = useCallback(
+    (selection: EditorSelection) => {
+      if (!roomID || !user) return;
+      socket.emit("cursor:change", {
+        roomID,
+        selection,
+        username: user.username,
+      });
+    },
+    [roomID, user],
   );
 
   // ==================== Problem Synchronization
@@ -295,6 +327,7 @@ const useInterviewRoom = ({
     emitCodeChange,
     emitProblemChange,
     emitTestCasesChange,
+    emitCursorChange,
   };
 };
 

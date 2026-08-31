@@ -21,15 +21,16 @@ import { TestCase } from "@/lib/types/TestCase";
 import { TestCaseResult } from "@/lib/types/TestCaseResult";
 import RestoreIcon from "@mui/icons-material/Restore";
 import { useState } from "react";
-import { EditorSelection } from "@/lib/types/EditorSelection";
+import { EditorSelection, RemoteCursor } from "@/lib/types/EditorSelection";
 
 type Props = {
   problem: Problem | null;
   code: string;
   testCases: TestCase[];
   results: TestCaseResult[];
+  remoteCursors?: RemoteCursor[];
   onCodeChange: (value: string | undefined) => void;
-  onCursorChange: (selection: EditorSelection) => void;
+  onCursorChange?: (selection: EditorSelection) => void;
   onResetCode: () => void;
   onRun: () => void;
   onSubmit: () => void;
@@ -43,6 +44,7 @@ export default function CodeInterface({
   code,
   testCases,
   results,
+  remoteCursors,
   onCodeChange,
   onCursorChange,
   onResetCode,
@@ -274,6 +276,7 @@ export default function CodeInterface({
             <Box sx={{ height: "100%" }}>
               <CodeEditor
                 value={code}
+                remoteCursors={remoteCursors}
                 onChange={onCodeChange}
                 onCursorChange={onCursorChange}
               />

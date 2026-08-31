@@ -24,3 +24,60 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.remote-selection-0 {
+  background: rgba(244, 67, 54, 0.2);
+}
+
+.remote-selection-1 {
+  background: rgba(156, 39, 176, 0.2);
+}
+
+.remote-selection-2 {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.remote-selection-3 {
+  background: rgba(255, 152, 0, 0.2);
+}
+
+.remote-selection-4 {
+  background: rgba(233, 30, 99, 0.2); 
+}
+
+.remote-cursor-0 {
+  border-left: 2px solid #f44336;
+}
+
+.remote-cursor-1 {
+  border-left: 2px solid #9c27b0;
+}
+
+.remote-cursor-2 {
+  border-left: 2px solid #4caf50;
+}
+
+.remote-cursor-3 {
+  border-left: 2px solid #ff9800;
+}
+
+.remote-cursor-4 {
+  border-left: 2px solid #e91e63;
+}
+
+.monaco-editor .monaco-hover {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 6px !important;
+  padding: 0 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+.monaco-editor .monaco-hover .hover-contents {
+  padding: 6px 10px !important;
+}
+
+.monaco-editor .monaco-hover .hover-contents code {
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}

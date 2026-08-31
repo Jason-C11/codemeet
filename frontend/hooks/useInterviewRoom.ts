@@ -119,8 +119,21 @@ const useInterviewRoom = ({
   // ==================== Code Synchronization
 
   useEffect(() => {
-    const handleCodeChange = ({ code }: { code: string }) => {
+    const handleCodeChange = ({
+      code,
+      username,
+      selection,
+    }: {
+      code: string;
+      username: string;
+      selection: EditorSelection;
+    }) => {
       onCodeChange(code);
+
+      onCursorChange({
+        username,
+        selection,
+      });
     };
 
     socket.on("code:change", handleCodeChange);
@@ -128,18 +141,18 @@ const useInterviewRoom = ({
     return () => {
       socket.off("code:change", handleCodeChange);
     };
-  }, [onCodeChange]);
+  }, [onCodeChange, onCursorChange]);
 
   const emitCodeChange = useCallback(
-    (code: string) => {
-      if (!roomID) return;
+    (code: string, selection: EditorSelection) => {
+      if (!roomID || !user) return;
 
       socket.emit("code:change", {
-        roomID,
         code,
+        selection,
       });
     },
-    [roomID],
+    [roomID, user],
   );
 
   // ==================== Code Editor Position
@@ -163,9 +176,7 @@ const useInterviewRoom = ({
     (selection: EditorSelection) => {
       if (!roomID || !user) return;
       socket.emit("cursor:change", {
-        roomID,
         selection,
-        username: user.username,
       });
     },
     [roomID, user],
@@ -190,7 +201,6 @@ const useInterviewRoom = ({
       if (!roomID) return;
 
       socket.emit("problem:change", {
-        roomID,
         problemId,
         starterCode,
         testCases,
@@ -222,7 +232,6 @@ const useInterviewRoom = ({
       if (!roomID) return;
 
       socket.emit("testCases:change", {
-        roomID,
         testCases,
       });
     },
@@ -302,10 +311,7 @@ const useInterviewRoom = ({
 
     setRoomError(null);
 
-    socket.emit("leaveRoom", {
-      roomID,
-      username: user.username,
-    });
+    socket.emit("leaveRoom");
 
     disconnectSocket();
     resetRoomState();

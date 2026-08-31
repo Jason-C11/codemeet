@@ -70,7 +70,8 @@ const getRoomUsers = (io, roomID) => {
   });
 };
 
-const handleLeaveRoom = (io, socket, { roomID, username }) => {
+const handleLeaveRoom = (io, socket) => {
+  const { roomID, username } = socket.data;
   socket.leave(roomID);
   socket.data.roomID = null;
 

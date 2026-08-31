@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Box } from "@mui/material";
 import {
   getAllProblems,
@@ -36,6 +36,18 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const [submissionResults, setSubmissionResults] =
     useState<SubmissionResults | null>(null);
 
+  // Local cursor/selection
+  const [selection, setSelection] = useState<EditorSelection>({
+    startLine: 1,
+    endLine: 1,
+    startColumn: 1,
+    endColumn: 1,
+    hasHighlight: false,
+  });
+
+  const selectionRef = useRef<EditorSelection>(selection);
+
+  // Remote cursors
   const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([]);
 
   // ==================== Problem Loading
@@ -61,7 +73,6 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       return problem;
     } catch (err) {
       console.error(`Failed to load problem: ${problemId}`, err);
-
       return null;
     }
   }, []);
@@ -73,8 +84,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const handleRemoteCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
   }, []);
-
   // ----- Remote Cursor Changes
+
   const handleRemoteCursorChange = useCallback((remoteCursor: RemoteCursor) => {
     setRemoteCursors((prev) => {
       const existing = prev.find(
@@ -154,6 +165,14 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     onCursorChange: handleRemoteCursorChange,
   });
 
+  useEffect(() => {
+    const activeUsernames = new Set(roomUsers.map((user) => user.username));
+
+    setRemoteCursors((prev) =>
+      prev.filter((cursor) => activeUsernames.has(cursor.username)),
+    );
+  }, [roomUsers]);
+
   // ==================== Room Actions
 
   const handleCreateRoom = () => {
@@ -169,8 +188,6 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
 
         setProblems(problems);
 
-        // When joining an existing room, the room state
-        // determines the problem instead.
         if (!initialRoomID) {
           const defaultProblem = problems[0];
 
@@ -208,11 +225,20 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
 
   // ==================== Code Actions
 
+  const codeChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value ?? "";
 
     setCode(newCode);
-    emitCodeChange(newCode);
+
+    if (codeChangeTimeoutRef.current) {
+      clearTimeout(codeChangeTimeoutRef.current);
+    }
+
+    codeChangeTimeoutRef.current = setTimeout(() => {
+      emitCodeChange(newCode, selection);
+    }, 50);
   };
 
   const handleResetCode = () => {
@@ -221,16 +247,22 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     const resetCode = problem.starterCode ?? "";
 
     setCode(resetCode);
-    emitCodeChange(resetCode);
+
+    emitCodeChange(resetCode, selectionRef.current);
   };
+
   // ==================== Code Selection
 
   const handleCursorChange = useCallback(
-    (selection: EditorSelection) => {
-      emitCursorChange(selection);
+    (newSelection: EditorSelection) => {
+      selectionRef.current = newSelection;
+      setSelection(newSelection);
+
+      emitCursorChange(newSelection);
     },
     [emitCursorChange],
   );
+
   // ==================== Test Case Actions
 
   const handleTestCasesChange = useCallback(
@@ -257,12 +289,10 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       const formattedTestCases = testCases.map((testCase, index) => {
         const sampleCount = problem.sampleTestCases?.length ?? 0;
 
-        // Sample test cases already match backend format
         if (index < sampleCount) {
           return testCase;
         }
 
-        // Convert custom test case inputs from strings
         return {
           input: testCase.input.map((value, paramIndex) => {
             try {
@@ -342,6 +372,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
         code={code}
         testCases={testCases}
         results={results}
+        remoteCursors={remoteCursors}
         onCodeChange={handleCodeChange}
         onResetCode={handleResetCode}
         onCursorChange={handleCursorChange}

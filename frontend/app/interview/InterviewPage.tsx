@@ -21,6 +21,8 @@ import SubmissionViewer from "@/components/SubmissionViewer";
 import useInterviewRoom, { RoomState } from "@/hooks/useInterviewRoom";
 import RoomControls from "@/components/RoomControls";
 import { EditorSelection, RemoteCursor } from "@/lib/types/EditorSelection";
+import VideoTile from "@/components/VideoTile";
+import useWebRTC from "@/hooks/useWebRTC";
 
 const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const { user } = useAuth();
@@ -146,6 +148,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   );
 
   const {
+    socket,
     roomID,
     roomEvent,
     roomError,
@@ -175,8 +178,30 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
 
   // ==================== Room Actions
 
-  const handleCreateRoom = () => {
-    createRoom(problem?.problemId ?? null, code, testCases);
+  const handleCreateRoom = async () => {
+    try {
+      await getLocalStream();
+      createRoom(problem?.problemId ?? null, code, testCases);
+    } catch (error) {
+      console.error("Error accessing camera/microphone:", error);
+      triggerSnackbar(
+        "Failed to access camera/microphone. Please check your device settings.",
+        "error",
+      );
+    }
+  };
+
+  const handleJoinRoom = async (roomID: string) => {
+    try {
+      await getLocalStream();
+      joinRoom(roomID);
+    } catch (error) {
+      console.error("Error accessing camera/microphone:", error);
+      triggerSnackbar(
+        "Failed to access camera/microphone. Please check your device settings.",
+        "error",
+      );
+    }
   };
 
   // ==================== Initialize Problems
@@ -262,6 +287,44 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     },
     [emitCursorChange],
   );
+
+  // ==================== WebRTC
+  const {
+    localStream,
+    remoteStreams,
+    getLocalStream,
+    cleanupWebRTC,
+    createOffer,
+  } = useWebRTC({ socket });
+
+  useEffect(() => {
+    const handleRoomUserJoined = ({
+      socketID,
+      username,
+    }: {
+      socketID: string;
+      username: string;
+    }) => {
+      if (!user) return;
+      // Don't create an offer to ourselves
+      if (socketID === socket.id) return;
+
+      console.log("Creating offer for newly joined user:", username);
+
+      createOffer(username);
+    };
+
+    socket.on("roomUserJoined", handleRoomUserJoined);
+
+    return () => {
+      socket.off("roomUserJoined", handleRoomUserJoined);
+    };
+  }, [socket, user, createOffer]);
+
+  const handleLeaveRoom = () => {
+    cleanupWebRTC();
+    leaveRoom();
+  };
 
   // ==================== Test Case Actions
 
@@ -367,6 +430,13 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
         overflow: "hidden",
       }}
     >
+      {localStream && (
+        <VideoTile
+          stream={localStream}
+          username={user?.username ?? "You"}
+          muted
+        />
+      )}
       <CodeInterface
         problem={problem}
         code={code}
@@ -388,8 +458,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
             roomError={roomError}
             roomUsers={roomUsers}
             onCreateRoom={handleCreateRoom}
-            onJoinRoom={joinRoom}
-            onLeaveRoom={leaveRoom}
+            onJoinRoom={handleJoinRoom}
+            onLeaveRoom={handleLeaveRoom}
           />
         }
       />

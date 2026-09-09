@@ -41,6 +41,11 @@ const handleJoinRoom = (
 
   const users = getRoomUsers(io, roomID);
 
+  socket.to(roomID).emit("roomUserJoined", {
+    socketID: socket.id,
+    username,
+  });
+
   io.to(roomID).emit("roomUsers", users);
 
   socket.emit("roomJoined", {
@@ -72,8 +77,15 @@ const getRoomUsers = (io, roomID) => {
 
 const handleLeaveRoom = (io, socket) => {
   const { roomID, username } = socket.data;
+
   socket.leave(roomID);
   socket.data.roomID = null;
+  socket.data.username = null;
+
+  // Tell remaining users who left
+  io.to(roomID).emit("roomUserLeft", {
+    username,
+  });
 
   const users = getRoomUsers(io, roomID);
 
@@ -88,13 +100,18 @@ const handleLeaveRoom = (io, socket) => {
 };
 
 const handleDisconnect = (io, socket) => {
-  const roomID = socket.data.roomID;
+  const { roomID, username } = socket.data;
 
   if (!roomID) return;
 
   const users = getRoomUsers(io, roomID).filter(
     (user) => user.socketID !== socket.id,
   );
+
+  // Tell remaining users who left
+  io.to(roomID).emit("roomUserLeft", {
+    username,
+  });
 
   io.to(roomID).emit("roomUsers", users);
 
@@ -103,7 +120,7 @@ const handleDisconnect = (io, socket) => {
     deleteRoomState(roomID);
   }
 
-  console.log(`${socket.id} left room ${roomID} as ${socket.data.username}`);
+  console.log(`${socket.id} left room ${roomID} as ${username}`);
 };
 
 const roomHandlers = (io, socket) => {
@@ -111,8 +128,8 @@ const roomHandlers = (io, socket) => {
     handleJoinRoom(io, socket, data);
   });
 
-  socket.on("leaveRoom", (data) => {
-    handleLeaveRoom(io, socket, data);
+  socket.on("leaveRoom", () => {
+    handleLeaveRoom(io, socket);
   });
 
   socket.on("disconnect", () => {

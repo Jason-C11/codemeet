@@ -121,6 +121,7 @@ const RoomControls = ({
   const handleCopy = async (text: string) => {
     await navigator.clipboard.writeText(text);
     triggerSnackbar("Copied to clipboard", "success");
+    setShareDialogOpen(false);
   };
 
   const handleOnLeaveRoom = () => {

@@ -321,6 +321,7 @@ const useInterviewRoom = ({
   // ==================== Return
 
   return {
+    socket,
     roomID,
     roomEvent,
     roomError,

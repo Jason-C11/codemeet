@@ -12,6 +12,9 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
 
   const peerConnections = useRef(new Map<string, RTCPeerConnection>()); // Map of username to RTCPeerConnection
   const remoteStreams = useRef(new Map<string, MediaStream>()); // Map of username to remote MediaStream
+  const [remoteStreamsState, setRemoteStreamsState] = useState<
+    Map<string, MediaStream>
+  >(new Map());
   const pendingICECandidates = useRef(new Map<string, RTCIceCandidateInit[]>()); // Map of username to pending ICE candidates
 
   const { user } = useAuth();
@@ -60,6 +63,7 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
 
       if (remoteStream) {
         remoteStreams.current.set(username, remoteStream);
+        setRemoteStreamsState(new Map(remoteStreams.current));
       }
     };
 
@@ -92,6 +96,7 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
     }
 
     remoteStreams.current.delete(username);
+    setRemoteStreamsState(new Map(remoteStreams.current));
   };
 
   // ==================== Signaling
@@ -254,6 +259,7 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
     // clear remote streams and pending ICE candidates
     remoteStreams.current.clear();
     pendingICECandidates.current.clear();
+    setRemoteStreamsState(new Map(remoteStreams.current));
 
     setLocalStream(null);
   };
@@ -288,7 +294,7 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
 
   return {
     localStream,
-    remoteStreams,
+    remoteStreamsState,
     getLocalStream,
     cleanupWebRTC,
     createOffer,

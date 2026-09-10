@@ -21,7 +21,7 @@ import SubmissionViewer from "@/components/SubmissionViewer";
 import useInterviewRoom, { RoomState } from "@/hooks/useInterviewRoom";
 import RoomControls from "@/components/RoomControls";
 import { EditorSelection, RemoteCursor } from "@/lib/types/EditorSelection";
-import VideoTile from "@/components/VideoTile";
+import VideoGrid from "@/components/VideoGrid";
 import useWebRTC from "@/hooks/useWebRTC";
 
 const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
@@ -291,7 +291,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   // ==================== WebRTC
   const {
     localStream,
-    remoteStreams,
+    remoteStreamsState,
     getLocalStream,
     cleanupWebRTC,
     createOffer,
@@ -431,10 +431,10 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       }}
     >
       {localStream && (
-        <VideoTile
-          stream={localStream}
+        <VideoGrid
+          localStream={localStream}
+          remoteStreams={remoteStreamsState}
           username={user?.username ?? "You"}
-          muted
         />
       )}
       <CodeInterface

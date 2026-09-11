@@ -11,6 +11,8 @@ type RoomEvent = "created" | "joined" | "left" | null;
 type RoomUser = {
   socketID: string;
   username: string;
+  micEnabled: boolean;
+  cameraEnabled: boolean;
 };
 
 export type RoomState = {
@@ -115,6 +117,42 @@ const useInterviewRoom = ({
       socket.off("roomUsers", handleRoomUsers);
     };
   }, []);
+
+  useEffect(() => {
+    const handleMediaState = ({
+      username,
+      micEnabled,
+      cameraEnabled,
+    }: {
+      username: string;
+      micEnabled: boolean;
+      cameraEnabled: boolean;
+    }) => {
+      setRoomUsers((prev) =>
+        prev.map((user) =>
+          user.username === username
+            ? { ...user, micEnabled, cameraEnabled }
+            : user,
+        ),
+      );
+    };
+
+    socket.on("mediaState", handleMediaState);
+
+    return () => {
+      socket.off("mediaState", handleMediaState);
+    };
+  }, []);
+
+  const emitMediaState = useCallback(
+    (micEnabled: boolean, cameraEnabled: boolean) => {
+      socket.emit("mediaState", {
+        micEnabled,
+        cameraEnabled,
+      });
+    },
+    [socket],
+  );
 
   // ==================== Code Synchronization
 
@@ -335,6 +373,7 @@ const useInterviewRoom = ({
     emitProblemChange,
     emitTestCasesChange,
     emitCursorChange,
+    emitMediaState,
   };
 };
 

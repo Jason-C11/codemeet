@@ -23,9 +23,11 @@ import RoomControls from "@/components/RoomControls";
 import { EditorSelection, RemoteCursor } from "@/lib/types/EditorSelection";
 import VideoGrid from "@/components/VideoGrid";
 import useWebRTC from "@/hooks/useWebRTC";
+import { useRouter } from "next/navigation";
 
 const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const { user } = useAuth();
+  const router = useRouter();
 
   // ==================== State
 
@@ -160,6 +162,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     emitProblemChange,
     emitTestCasesChange,
     emitCursorChange,
+    emitMediaState,
   } = useInterviewRoom({
     onRoomState: handleRoomState,
     onCodeChange: handleRemoteCodeChange,
@@ -292,6 +295,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const {
     localStream,
     remoteStreamsState,
+    toggleMic,
+    toggleCamera,
     getLocalStream,
     cleanupWebRTC,
     createOffer,
@@ -309,8 +314,6 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       // Don't create an offer to ourselves
       if (socketID === socket.id) return;
 
-      console.log("Creating offer for newly joined user:", username);
-
       createOffer(username);
     };
 
@@ -324,6 +327,23 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const handleLeaveRoom = () => {
     cleanupWebRTC();
     leaveRoom();
+    router.push("/interview");
+  };
+
+  const handleToggleMic = () => {
+    const micEnabled = toggleMic();
+    const cameraEnabled = localStream?.getVideoTracks()[0]?.enabled ?? false;
+
+    emitMediaState(micEnabled, cameraEnabled);
+    return micEnabled;
+  };
+
+  const handleToggleCamera = () => {
+    const cameraEnabled = toggleCamera();
+    const micEnabled = localStream?.getAudioTracks()[0]?.enabled ?? false;
+
+    emitMediaState(micEnabled, cameraEnabled);
+    return cameraEnabled;
   };
 
   // ==================== Test Case Actions
@@ -435,6 +455,10 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
           localStream={localStream}
           remoteStreams={remoteStreamsState}
           username={user?.username ?? "You"}
+          toggleMic={handleToggleMic}
+          toggleCamera={handleToggleCamera}
+          roomUsers={roomUsers}
+          onLeaveRoom={handleLeaveRoom}
         />
       )}
       <CodeInterface

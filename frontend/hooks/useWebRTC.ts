@@ -15,6 +15,7 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
   const [remoteStreamsState, setRemoteStreamsState] = useState<
     Map<string, MediaStream>
   >(new Map());
+
   const pendingICECandidates = useRef(new Map<string, RTCIceCandidateInit[]>()); // Map of username to pending ICE candidates
 
   const { user } = useAuth();
@@ -35,15 +36,31 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
 
     return stream;
   };
+  // ==================== Camera / Microphone Toggle
+  const toggleMic = () => {
+    const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+
+    if (!audioTrack) return false;
+
+    audioTrack.enabled = !audioTrack.enabled;
+
+    return audioTrack.enabled;
+  };
+
+  const toggleCamera = () => {
+    const videoTrack = localStreamRef.current?.getVideoTracks()[0];
+
+    if (!videoTrack) return false;
+
+    videoTrack.enabled = !videoTrack.enabled;
+
+    return videoTrack.enabled;
+  };
 
   // ==================== Peer Connection
 
   const createPeerConnection = (username: string) => {
     if (!localStreamRef.current) {
-      console.log(
-        "No local stream available for peer connection with:",
-        username,
-      );
       return;
     }
 
@@ -56,9 +73,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
     });
 
     pc.ontrack = (event) => {
-      console.log("Received remote track from:", username);
-      console.log("Remote stream:", event.streams[0]);
-
       const [remoteStream] = event.streams;
 
       if (remoteStream) {
@@ -69,8 +83,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log("Sending ICE candidate to:", username);
-
         socket.emit("webrtc:ice-candidate", {
           candidate: event.candidate,
           targetUsername: username,
@@ -79,10 +91,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
     };
 
     peerConnections.current.set(username, pc);
-
-    pc.onconnectionstatechange = () => {
-      console.log(`WebRTC connection with ${username}:`, pc.connectionState);
-    };
 
     return pc;
   };
@@ -102,8 +110,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
   // ==================== Signaling
 
   const createOffer = async (targetUsername: string) => {
-    console.log("Creating offer for:", targetUsername);
-
     const pc = createPeerConnection(targetUsername);
 
     if (!pc) return;
@@ -112,8 +118,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
       const offer = await pc.createOffer();
 
       await pc.setLocalDescription(offer);
-
-      console.log("Sending offer to:", targetUsername);
 
       socket.emit("webrtc:offer", {
         offer,
@@ -133,8 +137,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
     senderSocketID: string;
     senderUsername: string;
   }) => {
-    console.log("Received offer from:", senderUsername);
-
     const pc = createPeerConnection(senderUsername);
 
     if (!pc) return;
@@ -154,8 +156,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
 
       await pc.setLocalDescription(answer);
 
-      console.log("Sending answer to:", senderUsername);
-
       socket.emit("webrtc:answer", {
         answer,
         targetSocketID: senderSocketID,
@@ -174,13 +174,9 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
   }) => {
     const pc = peerConnections.current.get(senderUsername);
 
-    console.log("Received answer from:", senderUsername);
-
     if (!pc) return;
     try {
       await pc.setRemoteDescription(answer);
-
-      console.log("Remote description set for:", senderUsername);
     } catch (error) {
       console.error("Error handling answer from:", senderUsername, error);
     }
@@ -195,8 +191,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
     candidate: RTCIceCandidateInit;
     senderUsername: string;
   }) => {
-    console.log("Received ICE candidate from:", senderUsername);
-
     const pc = peerConnections.current.get(senderUsername);
 
     if (!pc) return;
@@ -218,7 +212,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
   //============== User left
   useEffect(() => {
     const handleRoomUserLeft = ({ username }: { username: string }) => {
-      console.log("User left:", username);
       closePeerConnection(username);
 
       pendingICECandidates.current.delete(username);
@@ -236,16 +229,7 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
   const cleanupWebRTC = () => {
     // Stop camera + mic
     localStreamRef.current?.getTracks().forEach((track) => {
-      console.log(
-        "Stopping track:",
-        track.kind,
-        "readyState:",
-        track.readyState,
-      );
-
       track.stop();
-
-      console.log("After stop:", track.kind, "readyState:", track.readyState);
     });
 
     localStreamRef.current = null;
@@ -267,7 +251,6 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
   // ==================== Cleanup on unmount or user logout
   useEffect(() => {
     return () => {
-      console.log("unmount usewebrtc");
       cleanupWebRTC();
     };
   }, []);
@@ -295,6 +278,8 @@ const useWebRTC = ({ socket }: UseWebRTCProps) => {
   return {
     localStream,
     remoteStreamsState,
+    toggleMic,
+    toggleCamera,
     getLocalStream,
     cleanupWebRTC,
     createOffer,

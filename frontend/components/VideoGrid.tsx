@@ -2,12 +2,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, IconButton, Paper, Tooltip } from "@mui/material";
 import RemoveIcon from "@mui/icons-material/Remove";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
+import MicIcon from "@mui/icons-material/Mic";
+import MicOffIcon from "@mui/icons-material/MicOff";
+import VideocamIcon from "@mui/icons-material/Videocam";
+import VideocamOffIcon from "@mui/icons-material/VideocamOff";
+import CallEndIcon from "@mui/icons-material/CallEnd";
 import VideoTile from "./VideoTile";
 
 interface VideoGridProps {
   localStream: MediaStream | null;
   remoteStreams: Map<string, MediaStream>;
   username: string;
+  toggleMic: () => boolean;
+  toggleCamera: () => boolean;
+  onLeaveRoom: () => void;
+  roomUsers: {
+    socketID: string;
+    username: string;
+    micEnabled: boolean;
+    cameraEnabled: boolean;
+  }[];
 }
 
 const MIN_WIDTH = 280;
@@ -20,6 +34,10 @@ const VideoGrid = ({
   localStream,
   remoteStreams,
   username,
+  toggleMic,
+  toggleCamera,
+  onLeaveRoom,
+  roomUsers,
 }: VideoGridProps) => {
   const [position, setPosition] = useState({
     x: 16,
@@ -48,6 +66,26 @@ const VideoGrid = ({
     height: DEFAULT_HEIGHT,
   });
 
+  const [localMicEnabled, setLocalMicEnabled] = useState(false);
+  const [localCameraEnabled, setLocalCameraEnabled] = useState(false);
+
+  useEffect(() => {
+    if (!localStream) return;
+
+    setLocalMicEnabled(localStream.getAudioTracks()[0]?.enabled ?? false);
+
+    setLocalCameraEnabled(localStream.getVideoTracks()[0]?.enabled ?? false);
+  }, [localStream]);
+  const handleToggleMic = () => {
+    const enabled = toggleMic();
+    setLocalMicEnabled(enabled);
+  };
+
+  const handleToggleCamera = () => {
+    const enabled = toggleCamera();
+    setLocalCameraEnabled(enabled);
+  };
+
   const participants = useMemo(() => {
     return [
       ...(localStream
@@ -56,16 +94,31 @@ const VideoGrid = ({
               username,
               stream: localStream,
               muted: true,
+              micEnabled: localMicEnabled,
+              cameraEnabled: localCameraEnabled,
             },
           ]
         : []),
-      ...Array.from(remoteStreams.entries()).map(([username, stream]) => ({
-        username,
-        stream,
-        muted: false,
-      })),
+      ...Array.from(remoteStreams.entries()).map(([username, stream]) => {
+        const roomUser = roomUsers.find((user) => user.username === username);
+
+        return {
+          username,
+          stream,
+          muted: false,
+          micEnabled: roomUser?.micEnabled ?? true,
+          cameraEnabled: roomUser?.cameraEnabled ?? true,
+        };
+      }),
     ];
-  }, [localStream, remoteStreams, username]);
+  }, [
+    localStream,
+    remoteStreams,
+    username,
+    roomUsers,
+    localMicEnabled,
+    localCameraEnabled,
+  ]);
 
   const participantCount = participants.length;
 
@@ -144,7 +197,6 @@ const VideoGrid = ({
 
       if (resizing.current) {
         const deltaX = event.clientX - resizeStart.current.x;
-
         const deltaY = event.clientY - resizeStart.current.y;
 
         setSize({
@@ -180,29 +232,119 @@ const VideoGrid = ({
         left: position.x,
         top: position.y,
         width: minimized ? 180 : size.width,
-        height: minimized ? 40 : size.height,
+        height: minimized ? 48 : size.height,
         zIndex: 2000,
         overflow: "hidden",
         borderRadius: 2,
         userSelect: "none",
       }}
     >
-      {/* Drag handle */}
       <Box
         onMouseDown={handleDragStart}
         sx={{
-          height: 40,
+          height: 48,
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
           px: 0.5,
           backgroundColor: "rgba(20, 20, 20, 0.95)",
           cursor: "grab",
         }}
       >
-        <Tooltip title={minimized ? "Restore" : "Minimize"}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Tooltip
+            title={localMicEnabled ? "Mute microphone" : "Unmute microphone"}
+            slotProps={{
+              popper: {
+                sx: {
+                  zIndex: 9999,
+                },
+              },
+            }}
+          >
+            <IconButton
+              size="small"
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={handleToggleMic}
+              sx={{
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              {localMicEnabled ? (
+                <MicIcon fontSize="small" />
+              ) : (
+                <MicOffIcon sx={{ color: "error.main" }} fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip
+            title={localCameraEnabled ? "Turn camera off" : "Turn camera on"}
+            slotProps={{
+              popper: {
+                sx: {
+                  zIndex: 9999,
+                },
+              },
+            }}
+          >
+            <IconButton
+              size="small"
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={handleToggleCamera}
+              sx={{
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              {localCameraEnabled ? (
+                <VideocamIcon fontSize="small" />
+              ) : (
+                <VideocamOffIcon
+                  sx={{ color: "error.main" }}
+                  fontSize="small"
+                />
+              )}
+            </IconButton>
+          </Tooltip>
+          <Tooltip
+            title={"Leave Room"}
+            slotProps={{
+              popper: {
+                sx: {
+                  zIndex: 9999,
+                },
+              },
+            }}
+          >
+            <IconButton
+              size="small"
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={onLeaveRoom}
+              sx={{
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              <CallEndIcon sx={{ color: "error.main" }} fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        <Tooltip
+          title={minimized ? "Restore" : "Minimize"}
+          slotProps={{
+            popper: {
+              sx: {
+                zIndex: 9999,
+              },
+            },
+          }}
+        >
           <IconButton
             size="small"
+            onMouseDown={(event) => event.stopPropagation()}
             onClick={() => setMinimized((prev) => !prev)}
             sx={{
               color: "white",
@@ -222,7 +364,7 @@ const VideoGrid = ({
         <Box
           sx={{
             width: "100%",
-            height: "calc(100% - 40px)",
+            height: "calc(100% - 48px)",
             display: "grid",
             gridTemplateColumns: gridTemplate.columns,
             gridTemplateRows: gridTemplate.rows,
@@ -252,6 +394,8 @@ const VideoGrid = ({
                   stream={participant.stream}
                   username={participant.username}
                   muted={participant.muted}
+                  micEnabled={participant.micEnabled}
+                  cameraEnabled={participant.cameraEnabled}
                 />
               </Box>
             );

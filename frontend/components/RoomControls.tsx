@@ -13,7 +13,6 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { triggerSnackbar } from "@/hooks/useSnackbar";
 import { useAuth } from "../context/AuthContext";
-import { useRouter } from "next/navigation";
 import RoomUsers from "./RoomUsers";
 
 type RoomUser = {
@@ -46,7 +45,6 @@ const RoomControls = ({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [inputRoomID, setInputRoomID] = useState("");
   const { user, loading } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
@@ -124,11 +122,6 @@ const RoomControls = ({
     setShareDialogOpen(false);
   };
 
-  const handleOnLeaveRoom = () => {
-    onLeaveRoom();
-    router.push("/interview");
-  };
-
   return (
     <>
       <Stack direction="row" spacing={1}>
@@ -148,11 +141,7 @@ const RoomControls = ({
               Share Room
             </Button>
 
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleOnLeaveRoom}
-            >
+            <Button variant="outlined" color="error" onClick={onLeaveRoom}>
               Leave Room
             </Button>
             <RoomUsers users={roomUsers} />

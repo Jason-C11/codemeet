@@ -27,6 +27,8 @@ const handleJoinRoom = (
 
   socket.data.username = username;
   socket.data.roomID = roomID;
+  socket.data.micEnabled = true;
+  socket.data.cameraEnabled = true;
 
   socket.join(roomID);
 
@@ -71,7 +73,24 @@ const getRoomUsers = (io, roomID) => {
     return {
       socketID,
       username: socket.data.username,
+      micEnabled: socket.data.micEnabled,
+      cameraEnabled: socket.data.cameraEnabled,
     };
+  });
+};
+
+const handleMediaState = (socket, { micEnabled, cameraEnabled }) => {
+  const { roomID, username } = socket.data;
+
+  if (!roomID) return;
+
+  socket.data.micEnabled = micEnabled;
+  socket.data.cameraEnabled = cameraEnabled;
+
+  socket.to(roomID).emit("mediaState", {
+    username,
+    micEnabled,
+    cameraEnabled,
   });
 };
 
@@ -130,6 +149,10 @@ const roomHandlers = (io, socket) => {
 
   socket.on("leaveRoom", () => {
     handleLeaveRoom(io, socket);
+  });
+
+  socket.on("mediaState", (data) => {
+    handleMediaState(socket, data);
   });
 
   socket.on("disconnect", () => {

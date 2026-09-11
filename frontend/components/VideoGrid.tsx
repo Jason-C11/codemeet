@@ -30,6 +30,10 @@ const MIN_HEIGHT = 180;
 const DEFAULT_WIDTH = 420;
 const DEFAULT_HEIGHT = 280;
 
+const clamp = (value: number, min: number, max: number) => {
+  return Math.min(Math.max(value, min), max);
+};
+
 const VideoGrid = ({
   localStream,
   remoteStreams,
@@ -54,6 +58,10 @@ const VideoGrid = ({
   const dragging = useRef(false);
   const resizing = useRef(false);
 
+  const positionRef = useRef(position);
+  const sizeRef = useRef(size);
+  const minimizedRef = useRef(minimized);
+
   const dragOffset = useRef({
     x: 0,
     y: 0,
@@ -70,12 +78,25 @@ const VideoGrid = ({
   const [localCameraEnabled, setLocalCameraEnabled] = useState(false);
 
   useEffect(() => {
+    positionRef.current = position;
+  }, [position]);
+
+  useEffect(() => {
+    sizeRef.current = size;
+  }, [size]);
+
+  useEffect(() => {
+    minimizedRef.current = minimized;
+  }, [minimized]);
+
+  useEffect(() => {
     if (!localStream) return;
 
     setLocalMicEnabled(localStream.getAudioTracks()[0]?.enabled ?? false);
 
     setLocalCameraEnabled(localStream.getVideoTracks()[0]?.enabled ?? false);
   }, [localStream]);
+
   const handleToggleMic = () => {
     const enabled = toggleMic();
     setLocalMicEnabled(enabled);
@@ -163,8 +184,8 @@ const VideoGrid = ({
     dragging.current = true;
 
     dragOffset.current = {
-      x: event.clientX - position.x,
-      y: event.clientY - position.y,
+      x: event.clientX - positionRef.current.x,
+      y: event.clientY - positionRef.current.y,
     };
 
     event.preventDefault();
@@ -178,8 +199,8 @@ const VideoGrid = ({
     resizeStart.current = {
       x: event.clientX,
       y: event.clientY,
-      width: size.width,
-      height: size.height,
+      width: sizeRef.current.width,
+      height: sizeRef.current.height,
     };
 
     event.preventDefault();
@@ -189,9 +210,15 @@ const VideoGrid = ({
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
       if (dragging.current) {
+        const newX = event.clientX - dragOffset.current.x;
+        const newY = event.clientY - dragOffset.current.y;
+
+        const width = minimizedRef.current ? 180 : sizeRef.current.width;
+        const height = minimizedRef.current ? 48 : sizeRef.current.height;
+
         setPosition({
-          x: event.clientX - dragOffset.current.x,
-          y: event.clientY - dragOffset.current.y,
+          x: clamp(newX, 0, window.innerWidth - width),
+          y: clamp(newY, 0, window.innerHeight - height),
         });
       }
 
@@ -199,9 +226,18 @@ const VideoGrid = ({
         const deltaX = event.clientX - resizeStart.current.x;
         const deltaY = event.clientY - resizeStart.current.y;
 
+        const maxWidth = window.innerWidth - positionRef.current.x;
+        const maxHeight = window.innerHeight - positionRef.current.y;
+
         setSize({
-          width: Math.max(MIN_WIDTH, resizeStart.current.width + deltaX),
-          height: Math.max(MIN_HEIGHT, resizeStart.current.height + deltaY),
+          width: Math.min(
+            maxWidth,
+            Math.max(MIN_WIDTH, resizeStart.current.width + deltaX),
+          ),
+          height: Math.min(
+            maxHeight,
+            Math.max(MIN_HEIGHT, resizeStart.current.height + deltaY),
+          ),
         });
       }
     };
@@ -308,6 +344,7 @@ const VideoGrid = ({
               )}
             </IconButton>
           </Tooltip>
+
           <Tooltip
             title={"Leave Room"}
             slotProps={{

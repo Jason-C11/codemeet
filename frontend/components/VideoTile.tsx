@@ -10,6 +10,7 @@ interface VideoTileProps {
   muted?: boolean;
   micEnabled?: boolean;
   cameraEnabled?: boolean;
+  isSpeaking?: boolean;
 }
 
 const VideoTile = ({
@@ -18,6 +19,7 @@ const VideoTile = ({
   muted = false,
   micEnabled = true,
   cameraEnabled = true,
+  isSpeaking = false,
 }: VideoTileProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -56,6 +58,8 @@ const VideoTile = ({
           height: "100%",
           objectFit: "cover",
           display: cameraEnabled ? "block" : "none",
+          border: isSpeaking ? "4px solid #4caf50" : "2px solid transparent",
+          transition: "border-color 0.15s ease",
         }}
       />
 

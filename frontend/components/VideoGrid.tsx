@@ -30,6 +30,8 @@ const MIN_HEIGHT = 180;
 const DEFAULT_WIDTH = 420;
 const DEFAULT_HEIGHT = 280;
 
+const SPEAKING_THRESHOLD = 0.012;
+
 const clamp = (value: number, min: number, max: number) => {
   return Math.min(Math.max(value, min), max);
 };
@@ -76,6 +78,18 @@ const VideoGrid = ({
 
   const [localMicEnabled, setLocalMicEnabled] = useState(false);
   const [localCameraEnabled, setLocalCameraEnabled] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioNodes = useRef(
+    new Map<
+      string,
+      {
+        stream: MediaStream;
+        source: MediaStreamAudioSourceNode;
+        analyser: AnalyserNode;
+      }
+    >(),
+  );
+  const [activeSpeakers, setActiveSpeakers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     positionRef.current = position;
@@ -260,6 +274,109 @@ const VideoGrid = ({
     return null;
   }
 
+  useEffect(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
+    }
+
+    const activeParticipants = new Set(
+      participants.map((participant) => participant.username),
+    );
+
+    for (const [username, nodes] of audioNodes.current) {
+      if (!activeParticipants.has(username)) {
+        nodes.source.disconnect();
+        nodes.analyser.disconnect();
+        audioNodes.current.delete(username);
+      }
+    }
+
+    for (const participant of participants) {
+      const existing = audioNodes.current.get(participant.username);
+
+      if (existing?.stream === participant.stream) {
+        continue;
+      }
+
+      if (existing) {
+        existing.source.disconnect();
+        existing.analyser.disconnect();
+      }
+
+      const source = audioContextRef.current.createMediaStreamSource(
+        participant.stream,
+      );
+      const analyser = audioContextRef.current.createAnalyser();
+
+      source.connect(analyser);
+
+      audioNodes.current.set(participant.username, {
+        stream: participant.stream,
+        source,
+        analyser,
+      });
+    }
+  }, [participants]);
+
+  useEffect(() => {
+    let animationFrameId: number;
+    let lastCheck = 0;
+
+    const detectSpeakers = (timestamp: number) => {
+      // 20 checks/second
+      if (timestamp - lastCheck >= 50) {
+        lastCheck = timestamp;
+
+        const speakingUsers = new Set<string>();
+
+        for (const participant of participants) {
+          const nodes = audioNodes.current.get(participant.username);
+
+          if (!nodes) continue;
+
+          const data = new Uint8Array(nodes.analyser.fftSize);
+          nodes.analyser.getByteTimeDomainData(data);
+
+          let sum = 0;
+
+          for (const value of data) {
+            const normalized = (value - 128) / 128;
+            sum += normalized * normalized;
+          }
+
+          const volume = Math.sqrt(sum / data.length);
+
+          if (volume > SPEAKING_THRESHOLD) {
+            speakingUsers.add(participant.username);
+          }
+        }
+
+        setActiveSpeakers(speakingUsers);
+      }
+
+      animationFrameId = requestAnimationFrame(detectSpeakers);
+    };
+
+    animationFrameId = requestAnimationFrame(detectSpeakers);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [participants]);
+
+  useEffect(() => {
+    return () => {
+      for (const nodes of audioNodes.current.values()) {
+        nodes.source.disconnect();
+        nodes.analyser.disconnect();
+      }
+
+      audioNodes.current.clear();
+      audioContextRef.current?.close();
+      audioContextRef.current = null;
+    };
+  }, []);
+
   return (
     <Paper
       elevation={8}
@@ -433,6 +550,7 @@ const VideoGrid = ({
                   muted={participant.muted}
                   micEnabled={participant.micEnabled}
                   cameraEnabled={participant.cameraEnabled}
+                  isSpeaking={activeSpeakers.has(participant.username)}
                 />
               </Box>
             );

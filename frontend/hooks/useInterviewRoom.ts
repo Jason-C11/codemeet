@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import socket from "../sockets/socket";
 import { TestCase } from "@/lib/types/TestCase";
 import { EditorSelection, RemoteCursor } from "@/lib/types/EditorSelection";
+import { StopwatchState } from "@/lib/types/StopwatchState";
 
 // ==================== Types
 
@@ -19,6 +20,7 @@ export type RoomState = {
   problemId: string | null;
   code: string;
   testCases: TestCase[];
+  stopwatch: StopwatchState;
 };
 
 interface UseInterviewRoomProps {
@@ -46,6 +48,11 @@ const useInterviewRoom = ({
   const [roomEvent, setRoomEvent] = useState<RoomEvent>(null);
   const [roomError, setRoomError] = useState<string | null>(null);
   const [roomUsers, setRoomUsers] = useState<RoomUser[]>([]);
+  const [stopwatch, setStopwatch] = useState<StopwatchState>({
+    running: false,
+    startedAt: null,
+    elapsed: 0,
+  });
 
   // ==================== Helpers
 
@@ -54,6 +61,7 @@ const useInterviewRoom = ({
     setRoomEvent(null);
     setRoomError(null);
     setRoomUsers([]);
+    setStopwatch({ running: false, startedAt: null, elapsed: 0 });
   };
 
   const disconnectSocket = () => {
@@ -94,6 +102,7 @@ const useInterviewRoom = ({
 
   useEffect(() => {
     const handleRoomState = (state: RoomState) => {
+      setStopwatch(state.stopwatch);
       onRoomState(state);
     };
 
@@ -150,6 +159,15 @@ const useInterviewRoom = ({
         micEnabled,
         cameraEnabled,
       });
+    },
+    [socket],
+  );
+
+  // ==================== Stopwatch
+
+  const emitStopwatchAction = useCallback(
+    (action: "start" | "pause" | "reset") => {
+      socket.emit("stopwatch", { action });
     },
     [socket],
   );
@@ -364,6 +382,7 @@ const useInterviewRoom = ({
     roomEvent,
     roomError,
     roomUsers,
+    stopwatch,
 
     createRoom,
     joinRoom,
@@ -374,6 +393,7 @@ const useInterviewRoom = ({
     emitTestCasesChange,
     emitCursorChange,
     emitMediaState,
+    emitStopwatchAction,
   };
 };
 

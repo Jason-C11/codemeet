@@ -84,7 +84,7 @@ const RoomControls = ({
 
   const handleCreateRoom = () => {
     if (!user) {
-      triggerSnackbar("You must be logged in to create a room", "error");
+      triggerSnackbar("You must be logged in to create a room.", "error");
       return;
     }
     onCreateRoom();
@@ -92,7 +92,7 @@ const RoomControls = ({
 
   const handleOpenJoinDialog = () => {
     if (!user) {
-      triggerSnackbar("You must be logged in to join a room", "error");
+      triggerSnackbar("You must be logged in to join a room.", "error");
       return;
     }
 

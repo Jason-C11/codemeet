@@ -5,6 +5,11 @@ const createRoomState = (roomID, { problemId, code, testCases }) => {
     problemId,
     code,
     testCases,
+    stopwatch: {
+      running: false,
+      startedAt: null,
+      elapsed: 0,
+    },
   });
 };
 

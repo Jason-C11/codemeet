@@ -16,12 +16,14 @@ import {
 } from "@mui/material";
 import CodeEditor from "@/components/CodeEditor";
 import TestCaseEditor from "@/components/TestCaseEditor";
+import Stopwatch from "@/components/Stopwatch";
 import { Problem } from "@/lib/types/Problem";
 import { TestCase } from "@/lib/types/TestCase";
 import { TestCaseResult } from "@/lib/types/TestCaseResult";
 import RestoreIcon from "@mui/icons-material/Restore";
 import { useState } from "react";
 import { EditorSelection, RemoteCursor } from "@/lib/types/EditorSelection";
+import { StopwatchState } from "@/lib/types/StopwatchState";
 
 type Props = {
   problem: Problem | null;
@@ -29,6 +31,8 @@ type Props = {
   testCases: TestCase[];
   results: TestCaseResult[];
   remoteCursors?: RemoteCursor[];
+  stopwatch?: StopwatchState;
+  stopwatchDisabled?: boolean;
   onCodeChange: (value: string | undefined) => void;
   onCursorChange?: (selection: EditorSelection) => void;
   onResetCode: () => void;
@@ -36,6 +40,7 @@ type Props = {
   onSubmit: () => void;
   onOpenProblemSelector: () => void;
   onSetTestCases: (testCases: TestCase[]) => void;
+  onStopwatchAction?: (action: "start" | "pause" | "reset") => void;
   toolbarActions?: React.ReactNode;
 };
 
@@ -45,6 +50,8 @@ export default function CodeInterface({
   testCases,
   results,
   remoteCursors,
+  stopwatch,
+  stopwatchDisabled,
   onCodeChange,
   onCursorChange,
   onResetCode,
@@ -52,6 +59,7 @@ export default function CodeInterface({
   onSubmit,
   onOpenProblemSelector,
   onSetTestCases,
+  onStopwatchAction,
   toolbarActions,
 }: Props) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -116,6 +124,11 @@ export default function CodeInterface({
                 </Button>
               </DialogActions>
             </Dialog>
+            <Stopwatch
+              stopwatch={stopwatch}
+              onStopwatchAction={onStopwatchAction}
+              isDisabled={stopwatchDisabled}
+            />
             {toolbarActions}
           </Box>
           <Box

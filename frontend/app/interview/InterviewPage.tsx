@@ -155,6 +155,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     roomEvent,
     roomError,
     roomUsers,
+    stopwatch,
     createRoom,
     joinRoom,
     leaveRoom,
@@ -163,6 +164,7 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     emitTestCasesChange,
     emitCursorChange,
     emitMediaState,
+    emitStopwatchAction,
   } = useInterviewRoom({
     onRoomState: handleRoomState,
     onCodeChange: handleRemoteCodeChange,
@@ -474,6 +476,9 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
         onOpenProblemSelector={() => setModalOpen(true)}
         onSetTestCases={handleTestCasesChange}
         onSubmit={handleSubmit}
+        stopwatch={stopwatch}
+        onStopwatchAction={emitStopwatchAction}
+        stopwatchDisabled={roomID === null}
         toolbarActions={
           <RoomControls
             roomID={roomID}

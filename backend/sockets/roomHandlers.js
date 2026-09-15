@@ -1,4 +1,9 @@
-import { createRoomState, getRoomState, deleteRoomState } from "./roomState.js";
+import {
+  createRoomState,
+  getRoomState,
+  deleteRoomState,
+  updateRoomState,
+} from "./roomState.js";
 
 const handleJoinRoom = (
   io,
@@ -58,8 +63,6 @@ const handleJoinRoom = (
 
   // Send the current state to the user
   socket.emit("roomState", getRoomState(roomID));
-
-  console.log(`${socket.id} joined room ${roomID} as ${username}`);
 };
 
 const getRoomUsers = (io, roomID) => {
@@ -94,6 +97,60 @@ const handleMediaState = (socket, { micEnabled, cameraEnabled }) => {
   });
 };
 
+const handleStopwatch = (io, socket, { action }) => {
+  const { roomID } = socket.data;
+
+  if (!roomID) return;
+
+  const state = getRoomState(roomID);
+
+  if (!state) return;
+
+  switch (action) {
+    case "start":
+      if (state.stopwatch.running) return;
+
+      updateRoomState(roomID, {
+        stopwatch: {
+          running: true,
+          startedAt: Date.now(),
+          elapsed: state.stopwatch.elapsed,
+        },
+      });
+      break;
+
+    case "pause":
+      if (!state.stopwatch.running || state.stopwatch.startedAt === null) {
+        return;
+      }
+
+      updateRoomState(roomID, {
+        stopwatch: {
+          running: false,
+          startedAt: null,
+          elapsed:
+            state.stopwatch.elapsed + (Date.now() - state.stopwatch.startedAt),
+        },
+      });
+      break;
+
+    case "reset":
+      updateRoomState(roomID, {
+        stopwatch: {
+          running: false,
+          startedAt: null,
+          elapsed: 0,
+        },
+      });
+      break;
+
+    default:
+      return;
+  }
+
+  io.to(roomID).emit("roomState", getRoomState(roomID));
+};
+
 const handleLeaveRoom = (io, socket) => {
   const { roomID, username } = socket.data;
 
@@ -114,8 +171,6 @@ const handleLeaveRoom = (io, socket) => {
   if (users.length === 0) {
     deleteRoomState(roomID);
   }
-
-  console.log(`${socket.id} left room ${roomID} as ${username}`);
 };
 
 const handleDisconnect = (io, socket) => {
@@ -138,8 +193,6 @@ const handleDisconnect = (io, socket) => {
   if (users.length === 0) {
     deleteRoomState(roomID);
   }
-
-  console.log(`${socket.id} left room ${roomID} as ${username}`);
 };
 
 const roomHandlers = (io, socket) => {
@@ -155,9 +208,12 @@ const roomHandlers = (io, socket) => {
     handleMediaState(socket, data);
   });
 
+  socket.on("stopwatch", (data) => {
+    handleStopwatch(io, socket, data);
+  });
+
   socket.on("disconnect", () => {
     handleDisconnect(io, socket);
-    console.log("Socket disconnected:", socket.id);
   });
 };
 

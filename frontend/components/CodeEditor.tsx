@@ -251,6 +251,7 @@ export default function CodeEditor({
           fontSize: 14,
           fontFamily: "var(--font-code)",
           fontLigatures: false,
+          occurrencesHighlight: "off",
 
           minimap: {
             enabled: false,

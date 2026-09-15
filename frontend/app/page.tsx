@@ -39,6 +39,24 @@ export default function Home() {
 
   const showcaseImages = [
     {
+      image: "/images/homepage/sample-meeting.png",
+      title: "Live Interview Sessions",
+      description:
+        "Conduct mock technical interviews with real-time video/audio, collaborative coding, and shared problem solving.",
+    },
+    {
+      image: "/images/homepage/sample-collaboration.png",
+      title: "Real-Time Collaboration",
+      description:
+        "Work together in the same code editor with synchronized code.",
+    },
+    {
+      image: "/images/homepage/sample-submission.png",
+      title: "Code Submission",
+      description:
+        "Submit your solution and receive instant feedback on its correctness.",
+    },
+    {
       image: "/images/homepage/sample-practice.png",
       title: "Practice Problems",
       description:
@@ -46,14 +64,8 @@ export default function Home() {
     },
     {
       image: "/images/homepage/sample-test-cases.png",
-      title: "Test Cases",
-      description: "Run your code against a set of custom test cases.",
-    },
-    {
-      image: "/images/homepage/sample-submission.png",
-      title: "Submission",
-      description:
-        "Submit your code and receive instant feedback on its performance.",
+      title: "Custom Test Cases",
+      description: "Run your code against your own test cases.",
     },
   ];
 

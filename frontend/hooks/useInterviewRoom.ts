@@ -325,7 +325,6 @@ const useInterviewRoom = ({
     const create = () => {
       socket.emit("joinRoom", {
         roomID,
-        username: user.username,
         create: true,
         problemId,
         code,
@@ -349,7 +348,6 @@ const useInterviewRoom = ({
     const join = () => {
       socket.emit("joinRoom", {
         roomID,
-        username: user.username,
         create: false,
       });
     };

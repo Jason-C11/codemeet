@@ -8,9 +8,10 @@ import {
 const handleJoinRoom = (
   io,
   socket,
-  { roomID, username, create, problemId, code, testCases },
+  { roomID, create, problemId, code, testCases },
 ) => {
   const roomExists = io.sockets.adapter.rooms.has(roomID);
+  const username = socket.data.user.username;
 
   // User is trying to join an existing room
   if (!create && !roomExists) {

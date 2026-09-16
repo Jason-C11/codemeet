@@ -1,6 +1,7 @@
 import { body, validationResult } from "express-validator";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import * as cookie from "cookie";
 
 export const registerInfoValidation = [
   body("email").isEmail().withMessage("Invalid email"),
@@ -54,5 +55,35 @@ export const isAuthenticated = async (req, res, next) => {
     next();
   } catch (err) {
     return res.status(401).json({ error: "Invalid token" });
+  }
+};
+
+export const authenticateSocket = async (socket, next) => {
+  try {
+    const cookies = cookie.parse(socket.handshake.headers.cookie || "");
+    const token = cookies.token;
+
+    if (!token) {
+      return next(new Error("Unauthorized"));
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.userId).select("username email");
+
+    if (!user) {
+      return next(new Error("User not found"));
+    }
+
+    socket.data.user = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    };
+
+    next();
+  } catch (error) {
+    console.error("Socket authentication error:", error);
+    next(new Error("Unauthorized"));
   }
 };

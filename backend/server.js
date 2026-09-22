@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import problemRoutes from "./routes/problemRoutes.js";
 import execRoutes from "./routes/execRoutes.js";
 import submitRoutes from "./routes/submitRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -37,6 +38,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/exec", execRoutes);
 app.use("/api/submit", submitRoutes);
+app.use("/api/ai", aiRoutes);
 
 // socket.io setup
 const httpServer = createServer(app);

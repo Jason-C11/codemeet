@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon --env-file=.env server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "bcrypt": "^6.0.0",
     "cookie": "^0.7.2",
     "cookie-parser": "^1.4.7",

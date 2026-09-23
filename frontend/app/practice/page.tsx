@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Box } from "@mui/material";
 import {
   getAllProblems,
@@ -38,6 +38,8 @@ export default function PracticePage() {
   const [hint, setHint] = useState<string | null>(null);
   const [isCodeEvalLoading, setIsCodeEvalLoading] = useState(false);
   const [isHintLoading, setIsHintLoading] = useState(false);
+  const codeEvalAbortController = useRef<AbortController | null>(null);
+  const hintAbortController = useRef<AbortController | null>(null);
 
   const { user } = useAuth();
 
@@ -51,6 +53,9 @@ export default function PracticePage() {
 
   const loadProblem = useCallback(async (problemId: string) => {
     try {
+      codeEvalAbortController.current?.abort();
+      hintAbortController.current?.abort();
+
       const problem = await getProblemById(problemId);
 
       setProblem(problem);
@@ -196,20 +201,36 @@ export default function PracticePage() {
       return;
     }
 
+    codeEvalAbortController.current?.abort();
+
+    const controller = new AbortController();
+    codeEvalAbortController.current = controller;
+
     setIsCodeEvalLoading(true);
 
     try {
-      const response = await aiCodeEvaluation(problem.problemId, code);
+      const response = await aiCodeEvaluation(
+        problem.problemId,
+        code,
+        controller.signal,
+      );
 
       setEvaluation(response);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+
       if (err instanceof Error) {
         triggerSnackbar(err.message, "error");
       } else {
         triggerSnackbar("Failed to analyze code.", "error");
       }
     } finally {
-      setIsCodeEvalLoading(false);
+      if (codeEvalAbortController.current === controller) {
+        codeEvalAbortController.current = null;
+        setIsCodeEvalLoading(false);
+      }
     }
   };
 
@@ -223,20 +244,36 @@ export default function PracticePage() {
       return;
     }
 
+    hintAbortController.current?.abort();
+
+    const controller = new AbortController();
+    hintAbortController.current = controller;
+
     setIsHintLoading(true);
 
     try {
-      const response = await aiHintGeneration(problem.problemId, code);
+      const response = await aiHintGeneration(
+        problem.problemId,
+        code,
+        controller.signal,
+      );
 
       setHint(response.hint);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+
       if (err instanceof Error) {
         triggerSnackbar(err.message, "error");
       } else {
         triggerSnackbar("Failed to generate hint.", "error");
       }
     } finally {
-      setIsHintLoading(false);
+      if (hintAbortController.current === controller) {
+        hintAbortController.current = null;
+        setIsHintLoading(false);
+      }
     }
   };
 

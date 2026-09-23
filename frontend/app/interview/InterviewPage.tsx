@@ -48,6 +48,9 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const [isCodeEvalLoading, setIsCodeEvalLoading] = useState(false);
   const [isHintLoading, setIsHintLoading] = useState(false);
 
+  const codeEvalAbortController = useRef<AbortController | null>(null);
+  const hintAbortController = useRef<AbortController | null>(null);
+
   // Local cursor/selection
   const [selection, setSelection] = useState<EditorSelection>({
     startLine: 1,
@@ -66,6 +69,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
 
   const loadProblem = useCallback(async (problemId: string) => {
     try {
+      codeEvalAbortController.current?.abort();
+      hintAbortController.current?.abort();
       const problem = await getProblemById(problemId);
       const sampleTestCases = problem.sampleTestCases ?? [];
 
@@ -462,20 +467,36 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       return;
     }
 
+    codeEvalAbortController.current?.abort();
+
+    const controller = new AbortController();
+    codeEvalAbortController.current = controller;
+
     setIsCodeEvalLoading(true);
 
     try {
-      const response = await aiCodeEvaluation(problem.problemId, code);
+      const response = await aiCodeEvaluation(
+        problem.problemId,
+        code,
+        controller.signal,
+      );
 
       setEvaluation(response);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+
       if (err instanceof Error) {
         triggerSnackbar(err.message, "error");
       } else {
         triggerSnackbar("Failed to analyze code.", "error");
       }
     } finally {
-      setIsCodeEvalLoading(false);
+      if (codeEvalAbortController.current === controller) {
+        codeEvalAbortController.current = null;
+        setIsCodeEvalLoading(false);
+      }
     }
   };
 
@@ -489,20 +510,36 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       return;
     }
 
+    hintAbortController.current?.abort();
+
+    const controller = new AbortController();
+    hintAbortController.current = controller;
+
     setIsHintLoading(true);
 
     try {
-      const response = await aiHintGeneration(problem.problemId, code);
+      const response = await aiHintGeneration(
+        problem.problemId,
+        code,
+        controller.signal,
+      );
 
       setHint(response.hint);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+
       if (err instanceof Error) {
         triggerSnackbar(err.message, "error");
       } else {
         triggerSnackbar("Failed to generate hint.", "error");
       }
     } finally {
-      setIsHintLoading(false);
+      if (hintAbortController.current === controller) {
+        hintAbortController.current = null;
+        setIsHintLoading(false);
+      }
     }
   };
 

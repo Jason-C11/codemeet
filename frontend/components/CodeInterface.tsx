@@ -276,6 +276,7 @@ export default function CodeInterface({
               sx={{
                 display: "flex",
                 alignItems: "center",
+                flexWrap: "wrap",
                 gap: 1,
                 px: 2,
                 py: 1,

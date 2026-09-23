@@ -5,6 +5,7 @@ async function send(
   url: string,
   data?: any,
   cookie?: string,
+  signal?: AbortSignal,
 ): Promise<any> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -19,6 +20,7 @@ async function send(
     headers,
     body: data ? JSON.stringify(data) : null,
     credentials: "include",
+    signal,
   });
 
   const contentType = res.headers.get("content-type");
@@ -80,10 +82,24 @@ export async function submitCode(problemId: string, code: string) {
 }
 
 // AI ======
-export async function aiCodeEvaluation(problemId: string, code: string) {
-  return send("POST", `/api/ai/evaluate/${problemId}`, { code });
+export async function aiCodeEvaluation(
+  problemId: string,
+  code: string,
+  signal?: AbortSignal,
+) {
+  return send(
+    "POST",
+    `/api/ai/evaluate/${problemId}`,
+    { code },
+    undefined,
+    signal,
+  );
 }
 
-export async function aiHintGeneration(problemId: string, code: string) {
-  return send("POST", `/api/ai/hint/${problemId}`, { code });
+export async function aiHintGeneration(
+  problemId: string,
+  code: string,
+  signal?: AbortSignal,
+) {
+  return send("POST", `/api/ai/hint/${problemId}`, { code }, undefined, signal);
 }

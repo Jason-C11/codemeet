@@ -8,9 +8,12 @@ import {
   getProblemById,
   executeCode,
   submitCode,
+  aiCodeEvaluation,
+  aiHintGeneration,
 } from "@/lib/api";
 import { Problem } from "@/lib/types/Problem";
 import { TestCase } from "@/lib/types/TestCase";
+import { CodeEvaluation } from "@/lib/types/CodeEvaluation";
 import { TestCaseResult } from "@/lib/types/TestCaseResult";
 import { parseParameter } from "@/utils/typeParser";
 import { triggerSnackbar } from "@/hooks/useSnackbar";
@@ -40,6 +43,11 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
   const [submissionResults, setSubmissionResults] =
     useState<SubmissionResults | null>(null);
 
+  const [evaluation, setEvaluation] = useState<CodeEvaluation | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
+  const [isCodeEvalLoading, setIsCodeEvalLoading] = useState(false);
+  const [isHintLoading, setIsHintLoading] = useState(false);
+
   // Local cursor/selection
   const [selection, setSelection] = useState<EditorSelection>({
     startLine: 1,
@@ -64,6 +72,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
       setProblem(problem);
       setCode(problem.starterCode ?? "");
       setTestCases(sampleTestCases);
+      setEvaluation(null);
+      setHint(null);
 
       setResults(
         sampleTestCases.map(
@@ -442,6 +452,60 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
     }
   };
 
+  // ==================== Code Evaluation
+
+  const handleCodeEval = async () => {
+    if (!problem) return;
+
+    if (!user) {
+      triggerSnackbar("You must be logged in to analyze code.", "error");
+      return;
+    }
+
+    setIsCodeEvalLoading(true);
+
+    try {
+      const response = await aiCodeEvaluation(problem.problemId, code);
+
+      setEvaluation(response);
+    } catch (err) {
+      if (err instanceof Error) {
+        triggerSnackbar(err.message, "error");
+      } else {
+        triggerSnackbar("Failed to analyze code.", "error");
+      }
+    } finally {
+      setIsCodeEvalLoading(false);
+    }
+  };
+
+  // ==================== Hint Generation
+
+  const handleHintGen = async () => {
+    if (!problem) return;
+
+    if (!user) {
+      triggerSnackbar("You must be logged in to receive hints.", "error");
+      return;
+    }
+
+    setIsHintLoading(true);
+
+    try {
+      const response = await aiHintGeneration(problem.problemId, code);
+
+      setHint(response.hint);
+    } catch (err) {
+      if (err instanceof Error) {
+        triggerSnackbar(err.message, "error");
+      } else {
+        triggerSnackbar("Failed to generate hint.", "error");
+      }
+    } finally {
+      setIsHintLoading(false);
+    }
+  };
+
   // ==================== Render
 
   return (
@@ -469,6 +533,10 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
         testCases={testCases}
         results={results}
         remoteCursors={remoteCursors}
+        codeEvaluation={evaluation}
+        hint={hint}
+        isCodeEvalLoading={isCodeEvalLoading}
+        isHintLoading={isHintLoading}
         onCodeChange={handleCodeChange}
         onResetCode={handleResetCode}
         onCursorChange={handleCursorChange}
@@ -479,6 +547,8 @@ const InterviewPage = ({ initialRoomID }: { initialRoomID?: string }) => {
         stopwatch={stopwatch}
         onStopwatchAction={emitStopwatchAction}
         stopwatchDisabled={roomID === null}
+        onCodeEval={handleCodeEval}
+        onHintGen={handleHintGen}
         toolbarActions={
           <RoomControls
             roomID={roomID}

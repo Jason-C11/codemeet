@@ -66,11 +66,24 @@ export async function getProblemById(problemId: string) {
 }
 
 // Execute code ======
-export async function executeCode(problemId: string, code: string, testCases: TestCase[]) {
+export async function executeCode(
+  problemId: string,
+  code: string,
+  testCases: TestCase[],
+) {
   return send("POST", `/api/exec/${problemId}`, { code, testCases });
 }
 
 // Submit code ======
 export async function submitCode(problemId: string, code: string) {
   return send("POST", `/api/submit/${problemId}`, { code });
+}
+
+// AI ======
+export async function aiCodeEvaluation(problemId: string, code: string) {
+  return send("POST", `/api/ai/evaluate/${problemId}`, { code });
+}
+
+export async function aiHintGeneration(problemId: string, code: string) {
+  return send("POST", `/api/ai/hint/${problemId}`, { code });
 }

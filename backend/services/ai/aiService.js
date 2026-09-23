@@ -24,10 +24,19 @@ Evaluate the submission on:
 3. optimalTimeComplexity: The best possible time complexity for this problem using Big O notation.
 4. optimalSpaceComplexity: The best possible space complexity for this problem using Big O notation.
 5. codeStyle: Your written feedback on the code style.
-6. suggestions: An array of clear, actionable tips to improve the code, if any.
+6. suggestions: An array of clear, actionable tips to noticeably improve the code, if any.
 
+Suggestions must be specific to the submitted code.
+Only provide a suggestion if there is an actual issue, inefficiency, readability problem, or meaningful improvement present in the code.
+
+Do not suggest adding, removing, or modifying imports. Assume all required imports are available, even if they are not shown in the submitted code.
+Do not suggest changes that the submitted code already implements.
+Do not suggest alternative approaches solely because they are possible alternatives. Only suggest an alternative approach if the current approach has a meaningful performance or implementation drawback.
+Do not suggest micro-optimizations or stylistic preferences unless they provide a meaningful improvement.
+Do not provide generic advice that could apply to any solution.
 Do not rewrite the entire solution.
-You can ignore any missing imports that would otherwise be needed in the code.
+
+If there are no meaningful improvements to make, return an empty suggestions array.
 
 `;
 

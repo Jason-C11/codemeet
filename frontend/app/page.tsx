@@ -63,6 +63,16 @@ export default function Home() {
         "Solve industry-standard coding problems designed to help you prepare for technical interviews.",
     },
     {
+      image: "/images/homepage/sample-hint.png",
+      title: "AI Helper",
+      description: "Get AI to give you hints based on your current code.",
+    },
+    {
+      image: "/images/homepage/sample-code-review.png",
+      title: "AI Code Evaluation",
+      description: "Get AI to review your code's complexity and style.",
+    },
+    {
       image: "/images/homepage/sample-test-cases.png",
       title: "Custom Test Cases",
       description: "Run your code against your own test cases.",

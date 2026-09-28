@@ -37,7 +37,9 @@ export default function SubmissionViewer({
       ? "Accepted"
       : result.status === "WRONG_ANSWER"
         ? "Wrong Answer"
-        : "Runtime Error";
+        : result.status === "TIMEOUT_ERROR"
+          ? "Time Limit Exceeded"
+          : "Runtime Error";
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -59,7 +61,9 @@ export default function SubmissionViewer({
 
           {result.status === "RUNTIME_ERROR"
             ? "Your code encountered a runtime error."
-            : `${result.passed} / ${result.total} test cases passed`}
+            : result.status === "TIMEOUT_ERROR"
+              ? "Your code exceeded the time limit."
+              : `${result.passed} / ${result.total} test cases passed`}
         </Alert>
       </DialogContent>
     </Dialog>

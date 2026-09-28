@@ -1,7 +1,9 @@
+import crypto from "crypto";
 import { runInDocker } from "./dockerRunner.js";
 
 export async function executeCode(code, metaData) {
   const timeoutMs = metaData.timeoutMs ?? 3000;
+  const containerName = `runner-${crypto.randomUUID()}`;
 
   const payload = {
     ...metaData,
@@ -9,17 +11,26 @@ export async function executeCode(code, metaData) {
   };
 
   return new Promise((resolve) => {
+    const { promise, kill } = runInDocker(payload, containerName);
+    
+    let isSettled = false;
+
     const timer = setTimeout(() => {
+      isSettled = true;
+      kill();
+
       resolve({
-        status: "TIMEOUT",
+        status: "TIMEOUT_ERROR",
         stdout: "",
-        stderr: "TIMEOUT",
+        stderr: "Execution timed out and container was terminated.",
         exitCode: null,
         result: null,
       });
     }, timeoutMs);
 
-    runInDocker(payload).then((result) => {
+    promise.then((result) => {
+      if (isSettled) return; 
+      
       clearTimeout(timer);
 
       let parsed = null;
@@ -38,7 +49,7 @@ export async function executeCode(code, metaData) {
 
       resolve({
         status: parsed?.status ?? "OK",
-        result: parsed, 
+        result: parsed,
         stderr: result.stderr,
         exitCode: result.exitCode,
       });

@@ -1,8 +1,9 @@
 import { executeCode } from "../services/execution/sandbox.js";
 import Problem from "../models/Problem.js";
+
 export const submit = async (req, res) => {
   try {
-    const { code  } = req.body;
+    const { code } = req.body;
     const problem = await Problem.findOne({ problemId: req.params.id });
 
     if (!problem) {
@@ -18,6 +19,21 @@ export const submit = async (req, res) => {
     };
 
     const execResult = await executeCode(code, metaData);
+
+    if (execResult.status === "TIMEOUT_ERROR") {
+      return res.status(200).json({
+        status: "TIMEOUT_ERROR",
+        result: {
+          status: "TIMEOUT_ERROR",
+          mode: "submit",
+          passed: 0,
+          total: problem.hiddenTestCases.length,
+        },
+        stderr: execResult.stderr,
+        exitCode: execResult.exitCode,
+      });
+    }
+
     res.status(200).json(execResult);
   } catch (error) {
     res.status(500).json({ message: error.message });

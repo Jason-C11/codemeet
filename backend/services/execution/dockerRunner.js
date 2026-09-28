@@ -1,13 +1,17 @@
 import { spawn } from "child_process";
 
-export function runInDocker(payload) {
-  return new Promise((resolve) => {
-    const docker = spawn(
+export function runInDocker(payload, containerName) {
+  let docker = null;
+
+  const promise = new Promise((resolve) => {
+    docker = spawn(
       "docker",
       [
         "run",
         "--rm",
         "-i",
+        "--name",
+        containerName,
         "--network",
         "none",
         "--memory",
@@ -18,7 +22,7 @@ export function runInDocker(payload) {
       ],
       {
         stdio: ["pipe", "pipe", "pipe"],
-      }
+      },
     );
 
     let stdout = "";
@@ -43,4 +47,19 @@ export function runInDocker(payload) {
     docker.stdin.write(JSON.stringify(payload));
     docker.stdin.end();
   });
+
+  return {
+    promise,
+    kill: () => {
+      const killProcess = spawn("docker", ["kill", containerName], {
+        stdio: "ignore",
+      });
+
+      killProcess.on("close", () => {
+        if (docker && !docker.killed) {
+          docker.kill("SIGKILL");
+        }
+      });
+    },
+  };
 }
